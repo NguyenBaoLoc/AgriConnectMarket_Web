@@ -1,0 +1,145 @@
+
+> agriconnect-market@0.0.0 build
+> tsc -b && vite build
+
+src/app/App.tsx(30,24): error TS1149: File name 'd:/KDDevs/FE/src/features/customer/components/Index.tsx' differs from already included file name 'd:/KDDevs/FE/src/features/customer/components/index.tsx' only in casing.
+  The file is in the program because:
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/HomePage/Index.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/UserProfile/Index.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/ProductPage/Index.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/CartPage/Index.tsx'
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/CheckoutPage/Index.tsx'
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/OrdersPage/Index.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/OrderDetailPage/Index.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/FavoriteListPage/Index.tsx'
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/ProductDetail/Index.tsx'
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/TraceabilityViewPage/Index.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/FarmDetail/Index.tsx'
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/NotificationPage/Index.tsx'
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/FeedbackPage/Index.tsx'
+    Imported via '../features/customer/components/Index' from file 'd:/KDDevs/FE/src/app/App.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/FarmsPage/Index.tsx'
+    Matched by include pattern 'src' in 'd:/KDDevs/FE/tsconfig.app.json'
+src/app/App.tsx(81,10): error TS6133: 'currentPage' is declared but its value is never read.
+src/app/App.tsx(85,10): error TS6133: 'cartRefreshKey' is declared but its value is never read.
+src/app/App.tsx(85,26): error TS6133: 'setCartRefreshKey' is declared but its value is never read.
+src/app/App.tsx(103,9): error TS6133: 'handleLogout' is declared but its value is never read.
+src/app/App.tsx(118,9): error TS6133: 'handleAddToCart' is declared but its value is never read.
+src/app/App.tsx(140,9): error TS6133: 'handleUpdateQuantity' is declared but its value is never read.
+src/app/App.tsx(146,9): error TS6133: 'handleRemoveItem' is declared but its value is never read.
+src/app/App.tsx(150,9): error TS6133: 'handlePlaceOrder' is declared but its value is never read.
+src/app/App.tsx(156,9): error TS6133: 'cartItemsCount' is declared but its value is never read.
+src/app/App.tsx(197,12): error TS6133: 'FarmerRedirect' is declared but its value is never read.
+src/app/App.tsx(202,12): error TS6133: 'AdminRedirect' is declared but its value is never read.
+src/components/ui/calendar.tsx(5,27): error TS2307: Cannot find module 'react-day-picker@8.10.1' or its corresponding type declarations.
+src/components/ui/calendar.tsx(63,22): error TS7031: Binding element 'className' implicitly has an 'any' type.
+src/components/ui/calendar.tsx(66,23): error TS7031: Binding element 'className' implicitly has an 'any' type.
+src/components/ui/carousel.tsx(6,8): error TS2307: Cannot find module 'embla-carousel-react@8.6.0' or its corresponding type declarations.
+src/components/ui/chart.tsx(4,36): error TS2307: Cannot find module 'recharts@2.15.2' or its corresponding type declarations.
+src/components/ui/chart.tsx(182,23): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/components/ui/chart.tsx(182,29): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/components/ui/chart.tsx(278,21): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/components/ui/command.tsx(4,45): error TS2307: Cannot find module 'cmdk@1.1.1' or its corresponding type declarations.
+src/components/ui/drawer.tsx(4,43): error TS2307: Cannot find module 'vaul@1.1.2' or its corresponding type declarations.
+src/components/ui/form.tsx(14,8): error TS2307: Cannot find module 'react-hook-form@7.55.0' or its corresponding type declarations.
+src/components/ui/input-otp.tsx(4,43): error TS2307: Cannot find module 'input-otp@1.4.2' or its corresponding type declarations.
+src/components/ui/input-otp.tsx(47,61): error TS2339: Property 'slots' does not exist on type '{}'.
+src/components/ui/resizable.tsx(5,37): error TS2307: Cannot find module 'react-resizable-panels@2.1.7' or its corresponding type declarations.
+src/components/ui/sidebar.tsx(5,10): error TS1484: 'VariantProps' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/features/admin/AdminProfile/AdminProfile.tsx(69,31): error TS2322: Type 'null' is not assignable to type 'string | undefined'.
+src/features/admin/components/AdminLayout/Index.tsx(2,3): error TS6133: 'FileText' is declared but its value is never read.
+src/features/admin/components/AdminLayout/Index.tsx(14,10): error TS6133: 'use' is declared but its value is never read.
+src/features/admin/components/AdminLayout/Index.tsx(19,21): error TS6133: 'setActiveTab' is declared but its value is never read.
+src/features/admin/Overview/AdminStats.tsx(119,23): error TS2322: Type 'UserStats[]' is not assignable to type 'ChartDataInput[]'.
+  Type 'UserStats' is not assignable to type 'ChartDataInput'.
+    Index signature for type 'string' is missing in type 'UserStats'.
+src/features/admin/Overview/AdminStats.tsx(130,39): error TS6133: 'entry' is declared but its value is never read.
+src/features/admin/Overview/AdminStats.tsx(208,23): error TS17001: JSX elements cannot have multiple attributes with the same name.
+src/features/admin/Overview/AdminStats.tsx(210,42): error TS6133: 'entry' is declared but its value is never read.
+src/features/admin/ReportList/ReportList.tsx(15,1): error TS6133: 'Pagination' is declared but its value is never read.
+src/features/admin/UserDetail/api.ts(3,15): error TS6196: 'UserProfile' is declared but never used.
+src/features/customer/Addresses/Index.tsx(13,3): error TS6133: 'DialogTrigger' is declared but its value is never read.
+src/features/customer/CartPage/Index.tsx(33,3): error TS6133: 'onNavigateToCheckout' is declared but its value is never read.
+src/features/customer/CartPage/Index.tsx(34,3): error TS6133: 'onNavigateToProductDetails' is declared but its value is never read.
+src/features/customer/components/index.tsx(23,3): error TS6133: 'notificationCount' is declared but its value is never read.
+src/features/customer/FarmsPage/Index.tsx(16,22): error TS6133: 'setAreaFilter' is declared but its value is never read.
+src/features/customer/HomePage/Index.tsx(5,1): error TS6133: 'CategorySection' is declared but its value is never read.
+src/features/customer/HomePage/Index.tsx(7,24): error TS1261: Already included file name 'd:/KDDevs/FE/src/features/customer/components/index.tsx' differs from file name 'd:/KDDevs/FE/src/features/customer/components/Index.tsx' only in casing.
+  The file is in the program because:
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/HomePage/Index.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/UserProfile/Index.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/ProductPage/Index.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/CartPage/Index.tsx'
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/CheckoutPage/Index.tsx'
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/OrdersPage/Index.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/OrderDetailPage/Index.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/FavoriteListPage/Index.tsx'
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/ProductDetail/Index.tsx'
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/TraceabilityViewPage/Index.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/FarmDetail/Index.tsx'
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/NotificationPage/Index.tsx'
+    Imported via "../components" from file 'd:/KDDevs/FE/src/features/customer/FeedbackPage/Index.tsx'
+    Imported via '../features/customer/components/Index' from file 'd:/KDDevs/FE/src/app/App.tsx'
+    Imported via '../components' from file 'd:/KDDevs/FE/src/features/customer/FarmsPage/Index.tsx'
+    Matched by include pattern 'src' in 'd:/KDDevs/FE/tsconfig.app.json'
+src/features/customer/HomePage/Index.tsx(17,3): error TS6133: 'onNavigateToProductDetails' is declared but its value is never read.
+src/features/customer/HomePage/Index.tsx(32,9): error TS6133: 'fruitsProducts' is declared but its value is never read.
+src/features/customer/HomePage/Index.tsx(65,9): error TS6133: 'vegetablesProducts' is declared but its value is never read.
+src/features/customer/HomePage/Index.tsx(98,9): error TS6133: 'leafyGreensProducts' is declared but its value is never read.
+src/features/customer/OrderConfirmationPage/Index.tsx(98,3): error TS6133: 'onViewOrders' is declared but its value is never read.
+src/features/customer/OrderPaymentPage/Index.tsx(1,21): error TS6133: 'useState' is declared but its value is never read.
+src/features/customer/PaymentResultPage/Index.tsx(50,41): error TS2339: Property 'orderCode' does not exist on type 'OrderResponse | CreateOrderResponse'.
+  Property 'orderCode' does not exist on type 'CreateOrderResponse'.
+src/features/customer/PaymentResultPage/Index.tsx(50,64): error TS2339: Property 'id' does not exist on type 'OrderResponse | CreateOrderResponse'.
+  Property 'id' does not exist on type 'CreateOrderResponse'.
+src/features/customer/ProductDetail/api/index.ts(33,3): error TS2741: Property 'verificationQr' is missing in type '{ id: string; name: string; price: number; unit: string; category: string; image: any; images: any[]; farm: string; farmId: string; farmLocation: string; inStock: boolean; stock: number; rating: number; reviews: number; description: string; features: string[]; nutritionFacts: { ...; }; }' but required in type 'ProductDetail'.
+src/features/customer/ProductDetail/components/ProductBasicInfo.tsx(29,3): error TS6133: 'onNavigateToError' is declared but its value is never read.
+src/features/customer/ProductDetail/components/ProductBasicInfo.tsx(31,3): error TS6133: 'isFavorite' is declared but its value is never read.
+src/features/customer/ProductDetail/components/ProductBasicInfo.tsx(32,3): error TS6133: 'toggleFavorite' is declared but its value is never read.
+src/features/customer/ProductDetail/components/Reviews.tsx(13,10): error TS6133: 'refreshKey' is declared but its value is never read.
+src/features/customer/ProductDetail/components/VerificationQRCode.tsx(11,73): error TS6133: 'farmId' is declared but its value is never read.
+src/features/customer/ProductDetail/components/VerificationQRCode.tsx(11,81): error TS6133: 'productId' is declared but its value is never read.
+src/features/customer/ProductDetail/Index.tsx(50,3): error TS6133: 'onNavigateToProducts' is declared but its value is never read.
+src/features/customer/ProductPage/api/index.ts(1,1): error TS6133: 'axios' is declared but its value is never read.
+src/features/customer/ProductPage/api/index.ts(2,1): error TS6133: 'API' is declared but its value is never read.
+src/features/customer/UserProfile/api/index.ts(5,3): error TS6196: 'Order' is declared but never used.
+src/features/customer/UserProfile/api/index.ts(57,3): error TS6133: 'request' is declared but its value is never read.
+src/features/customer/UserProfile/api/index.ts(130,3): error TS6133: 'request' is declared but its value is never read.
+src/features/customer/UserProfile/components/InfoRow.tsx(1,10): error TS6133: 'User' is declared but its value is never read.
+src/features/customer/UserProfile/components/OrderHistory.tsx(4,3): error TS6133: 'CardContent' is declared but its value is never read.
+src/features/customer/UserProfile/components/OrderHistory.tsx(9,22): error TS6196: 'Status' is declared but never used.
+src/features/customer/UserProfile/components/OrderHistory.tsx(10,1): error TS6133: 'OrderComponent' is declared but its value is never read.
+src/features/customer/UserProfile/components/OrderHistory.tsx(16,3): error TS6133: 'orderList' is declared but its value is never read.
+src/features/customer/UserProfile/Index.tsx(4,1): error TS6133: 'Input' is declared but its value is never read.
+src/features/customer/UserProfile/Index.tsx(6,1): error TS6133: 'Textarea' is declared but its value is never read.
+src/features/customer/UserProfile/Index.tsx(53,10): error TS6133: 'favoriteFarms' is declared but its value is never read.
+src/features/customer/UserProfile/Index.tsx(172,32): error TS2322: Type 'null' is not assignable to type 'string | undefined'.
+src/features/farmer/FarmDetail/FarmDetail.tsx(19,1): error TS6192: All imports in import declaration are unused.
+src/features/farmer/FarmDetail/FarmDetail.tsx(54,10): error TS6133: 'provinces' is declared but its value is never read.
+src/features/farmer/FarmDetail/FarmDetail.tsx(55,10): error TS6133: 'districts' is declared but its value is never read.
+src/features/farmer/FarmDetail/FarmDetail.tsx(56,10): error TS6133: 'wards' is declared but its value is never read.
+src/features/farmer/FarmDetail/FarmDetail.tsx(57,10): error TS6133: 'isLoadingProvinces' is declared but its value is never read.
+src/features/farmer/FarmDetail/FarmDetail.tsx(58,10): error TS6133: 'isLoadingDistricts' is declared but its value is never read.
+src/features/farmer/FarmDetail/FarmDetail.tsx(59,10): error TS6133: 'isLoadingWards' is declared but its value is never read.
+src/features/farmer/FarmDetail/FarmDetail.tsx(255,46): error TS6133: 'uploadCertificateLocal' is declared but its value is never read.
+src/features/farmer/OrderDetail/OrderDetail.tsx(2,30): error TS6133: 'Truck' is declared but its value is never read.
+src/features/farmer/OrderList/OrderList.tsx(7,1): error TS6133: 'Badge' is declared but its value is never read.
+src/features/farmer/OrderList/OrderList.tsx(70,10): error TS6133: 'farmId' is declared but its value is never read.
+src/features/farmer/OrderList/OrderList.tsx(221,9): error TS6133: 'getStatusColor' is declared but its value is never read.
+src/features/farmer/ProductBatchList/api/index.ts(7,3): error TS6196: 'ProductBatch' is declared but never used.
+src/features/farmer/ProductBatchList/components/AddProductBatchDialog.tsx(53,10): error TS6133: 'farmId' is declared but its value is never read.
+src/features/farmer/ProductBatchList/components/AddProductBatchDialog.tsx(108,20): error TS2345: Argument of type 'Season[]' is not assignable to parameter of type 'SetStateAction<Season[]>'.
+  Type 'import("d:/KDDevs/FE/src/features/farmer/SeasonList/types/index").Season[]' is not assignable to type 'import("d:/KDDevs/FE/src/features/farmer/ProductBatchList/types/index").Season[]'.
+    Type 'import("d:/KDDevs/FE/src/features/farmer/SeasonList/types/index").Season' is not assignable to type 'import("d:/KDDevs/FE/src/features/farmer/ProductBatchList/types/index").Season'.
+      Types of property 'updatedAt' are incompatible.
+        Type 'string | undefined' is not assignable to type 'string'.
+          Type 'undefined' is not assignable to type 'string'.
+src/features/farmer/ProductBatchList/components/HarvestDialog.tsx(2,1): error TS6133: 'Button' is declared but its value is never read.
+src/features/farmer/ProductBatchList/components/SellDialog.tsx(2,1): error TS6133: 'Button' is declared but its value is never read.
+src/features/farmer/ProductList/ProductList.tsx(6,1): error TS6133: 'Badge' is declared but its value is never read.
+src/features/farmer/SeasonList/api/index.ts(3,15): error TS6196: 'FarmResponse' is declared but never used.
+src/features/farmer/SeasonList/SeasonList.tsx(2,29): error TS6133: 'Calendar' is declared but its value is never read.
+src/features/farmer/SeasonList/SeasonList.tsx(39,10): error TS6133: 'farm' is declared but its value is never read.
+src/features/farmer/SeasonList/SeasonList.tsx(39,16): error TS6133: 'setFarm' is declared but its value is never read.
+src/hooks/useVNPayment.ts(1,23): error TS6133: 'useEffect' is declared but its value is never read.
+src/hooks/useVNPayment.ts(14,9): error TS6133: 'navigate' is declared but its value is never read.
