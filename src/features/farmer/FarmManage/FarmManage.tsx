@@ -1,25 +1,25 @@
-import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
-import { Button } from "../../../components/ui/button";
-import { toast } from "sonner";
-import type { Farm } from "./types";
-import { getFarms } from "./api";
-import { AddFarmDialog } from "./components/AddFarmDialog";
-import { FarmDetail } from "../FarmDetail/FarmDetail";
-import { useFarmCheck } from "../../../hooks/useFarmCheck";
+import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
+import { Button } from '../../../components/ui/button';
+import { toast } from 'sonner';
+import type { Farm } from './types';
+import { getFarms } from './api';
+import { AddFarmDialog } from './components/AddFarmDialog';
+import { FarmDetail } from '../FarmDetail/FarmDetail';
+import { useFarmCheck } from '../../../hooks/useFarmCheck';
 
 const defaultFarm: Farm = {
-  farmName: "",
-  bannerUrl: "",
-  phone: "",
-  area: "",
+  farmName: '',
+  bannerUrl: '',
+  phone: '',
+  area: '',
   isDeleted: false,
   isBanned: false,
   isValidForSelling: false,
   isConfirmAsMall: false,
-  farmerId: "",
-  addressId: "",
-  id: "",
+  farmerId: '',
+  addressId: '',
+  id: '',
 };
 
 export function FarmManage() {
@@ -36,10 +36,10 @@ export function FarmManage() {
           setFarm(farmsResponse.data);
           saveFarmIdToLocalStorage(farmsResponse.data.id);
         } else {
-          toast.error(farmsResponse.message || "Failed to fetch farms");
+          toast.error(farmsResponse.message || 'Failed to fetch farms');
         }
       } catch (error) {
-        console.error("Error fetching farms:", error);
+        console.error('Error fetching farms:', error);
       }
     };
     fetchFarms();
@@ -88,10 +88,10 @@ export function FarmManage() {
                   setFarm(farmsResponse.data);
                   saveFarmIdToLocalStorage(farmsResponse.data.id);
                   setShowAddFarmDialog(false);
-                  toast.success("Farm created successfully!");
+                  toast.success('Farm created successfully!');
                 }
               } catch (error) {
-                console.error("Error fetching farms:", error);
+                console.error('Error fetching farms:', error);
               }
             };
             fetchFarms();

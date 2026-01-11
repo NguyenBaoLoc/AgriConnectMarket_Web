@@ -20,6 +20,7 @@ interface ProductBatch {
   harvestDate: string;
   seasonId: string;
   imageUrls: ImageUrl[];
+  verificationQr?: string;
   createdAt: string;
   updatedAt: string;
   id: string;
@@ -63,6 +64,18 @@ interface Product {
   id: string;
 }
 
+interface Address {
+  province: string;
+  district: string;
+  ward: string;
+  detail: string;
+  isDefault: boolean;
+  isDelete: boolean;
+  createdAt: string;
+  updatedAt: string;
+  id: string;
+}
+
 interface Farm {
   farmName: string;
   farmDesc: string;
@@ -79,6 +92,7 @@ interface Farm {
   farmerId: string;
   addressId: string;
   id: string;
+  address?: Address;
 }
 
 interface SeasonWithRelations extends Season {
@@ -99,6 +113,7 @@ export type {
   Season,
   Product,
   Farm,
+  Address,
   SeasonWithRelations,
   ProductBatchDetail,
   BatchCode,

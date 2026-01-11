@@ -1,4 +1,4 @@
-import type { ApiResponse } from "../../../../types";
+import type { ApiResponse } from '../../../../types';
 
 interface Address {
   province: string;

@@ -1,6 +1,6 @@
-import type { ApiResponse } from "../../../../types";
+import type { ApiResponse } from '../../../../types';
 
-type Status = "Pending" | "Upcoming" | "Active" | "Completed";
+type Status = 'Pending' | 'Active' | 'Harvested' | 'Closed';
 
 interface Season {
   seasonName: string;
@@ -38,4 +38,11 @@ interface ProductBatch {
 type SeasonDetailResponse = ApiResponse<Season>;
 type ProductBatchListBySeason = ApiResponse<ProductBatch[]>;
 
-export type { Season, SeasonDetailResponse, Status, ProductBatch, BatchCode, ProductBatchListBySeason };
+export type {
+  Season,
+  SeasonDetailResponse,
+  Status,
+  ProductBatch,
+  BatchCode,
+  ProductBatchListBySeason,
+};

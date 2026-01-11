@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Eye, Search } from 'lucide-react';
+import { formatUtcDateTime } from '../../../utils/timeUtils';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Badge } from '../../../components/ui/badge';
@@ -178,7 +179,7 @@ export function UserList() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {new Date(user.createdAt).toLocaleString()}
+                      {formatUtcDateTime(user.createdAt)}
                     </TableCell>
                     <TableCell>
                       <Button

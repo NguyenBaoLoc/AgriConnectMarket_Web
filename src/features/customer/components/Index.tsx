@@ -12,6 +12,7 @@ import { NavigationButton } from './Header/components/NavigationButton';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getCartItems } from '../CartPage/api';
+import { removeCredentials } from '../../../utils/credentialsSettings';
 export { Footer } from './Footer/Footer';
 
 interface HeaderProps {
@@ -80,11 +81,8 @@ export function Header({
     navigate('/cart');
   }
   function onLogout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('role');
+    removeCredentials();
     navigate('/');
-    window.location.reload();
   }
 
   return (

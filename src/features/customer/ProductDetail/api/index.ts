@@ -7,6 +7,7 @@ import type {
   ProductBatchResponse,
   CareEventResponse,
 } from '../types';
+import { formatUtcDate } from '../../../../utils/timeUtils';
 
 export async function getProductBatchDetails(
   productId: string
@@ -57,8 +58,8 @@ function transformBatchToDetail(batch: ProductBatchData): ProductDetail {
     features: [
       'Batch Code: ' + batch.batchCode.value,
       'Total Yield: ' + batch.totalYield + ' ' + batch.units,
-      'Planting Date: ' + new Date(batch.plantingDate).toLocaleDateString(),
-      'Harvest Date: ' + new Date(batch.harvestDate).toLocaleDateString(),
+      'Planting Date: ' + formatUtcDate(batch.plantingDate),
+      'Harvest Date: ' + formatUtcDate(batch.harvestDate),
     ],
     nutritionFacts: {
       servingSize: batch.units,

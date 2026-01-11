@@ -3,6 +3,7 @@ import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { formatVND } from '../../../components/ui/utils';
+import { formatUtcDate } from '../../../utils/timeUtils';
 
 interface ShippingAddress {
   detail: string;
@@ -153,9 +154,7 @@ export function OrderConfirmation({
   console.log('EffectiveOrderData:', effectiveOrderData);
   console.log('FinalOrderItems:', finalOrderItems);
 
-  const estimatedDelivery = new Date(
-    Date.now() + 5 * 24 * 60 * 60 * 1000
-  ).toLocaleDateString('vi-VN');
+  const estimatedDelivery = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
 
   return (
     <div className="flex items-center justify-center p-4">
@@ -171,132 +170,6 @@ export function OrderConfirmation({
             shortly.
           </p>
         </div>
-
-        {/* Order Details */}
-        <Card className="p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Order Number</p>
-              <p className="font-mono">{finalOrderCode}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Order Date</p>
-              <p>{new Date(finalOrderDate).toLocaleDateString('vi-VN')}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Total Amount</p>
-              <p className="text-green-600">{formatVND(finalTotalPrice)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">
-                Estimated Delivery
-              </p>
-              <p>{estimatedDelivery}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Order Status</p>
-              <p className="font-medium">{finalOrderStatus}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">
-                Payment Status
-              </p>
-              <p className="font-medium">{finalPaymentStatus}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">
-                Payment Method
-              </p>
-              <p className="font-medium">{finalPaymentMethod}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Shipping Fee</p>
-              <p className="font-medium">
-                ₫{finalShippingFee.toLocaleString('vi-VN')}
-              </p>
-            </div>
-          </div>
-
-          {/* Customer Info */}
-          <div className="border-t pt-6 mb-6">
-            <h3 className="text-gray-900 mb-3">Customer Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Full Name</p>
-                <p className="font-medium">{finalCustomerName}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium break-all">{finalCustomerEmail}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Phone</p>
-                <p className="font-medium">{finalCustomerPhone}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Order Items by Farm */}
-          {finalOrderItems.length > 0 && (
-            <div className="border-t pt-6 mb-6">
-              <h3 className="text-gray-900 mb-3">Order Items</h3>
-              <div className="space-y-6">
-                {finalOrderItems.map((farm: FarmItems) => (
-                  <div key={farm.farmId}>
-                    <p className="text-sm font-semibold text-green-600 mb-3">
-                      {farm.farmName}
-                    </p>
-                    <div className="space-y-2 ml-2">
-                      {farm.items?.map((item: OrderItemDetail) => (
-                        <div
-                          key={item.itemId}
-                          className="flex justify-between text-sm text-gray-700 p-2 bg-gray-50 rounded"
-                        >
-                          <div className="flex-1">
-                            <p className="font-medium">{item.productName}</p>
-                            <p className="text-xs text-gray-500">
-                              Batch: {item.batchCode} | {item.categoryName} |{' '}
-                              {item.seasonName}
-                            </p>
-                          </div>
-                          <div className="text-right ml-2">
-                            <p className="text-xs">
-                              {item.quantity} {item.units}
-                            </p>
-                            <p className="font-medium">
-                              ₫
-                              {(item.itemPrice * item.quantity).toLocaleString(
-                                'vi-VN'
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="border-t pt-6">
-            <h3 className="text-gray-900 mb-3">Shipping Address</h3>
-            <div className="flex items-start gap-2">
-              <MapPin className="h-5 w-5 text-green-600 mt-0.5" />
-              <div>
-                <p className="font-medium">{finalCustomerName}</p>
-                <p className="text-muted-foreground">
-                  {finalShippingAddress?.detail || 'N/A'}
-                </p>
-                <p className="text-muted-foreground">
-                  {finalShippingAddress?.ward || 'N/A'},{' '}
-                  {finalShippingAddress?.district || 'N/A'},{' '}
-                  {finalShippingAddress?.province || 'N/A'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
 
         {/* What's Next */}
         <Card className="p-6 mb-6">
@@ -331,7 +204,7 @@ export function OrderConfirmation({
               <div>
                 <p>Delivery</p>
                 <p className="text-sm text-muted-foreground">
-                  Expected delivery by {estimatedDelivery}
+                  Expected delivery by {formatUtcDate(estimatedDelivery)}
                 </p>
               </div>
             </div>

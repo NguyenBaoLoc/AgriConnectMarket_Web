@@ -1,6 +1,6 @@
-import type { ApiResponse } from "../../../../types";
+import type { ApiResponse } from '../../../../types';
 
-type Status = "Pending" | "Upcoming" | "Active" | "Completed";
+type Status = 'Pending' | 'Active' | 'Harvested' | 'Closed';
 interface Season {
   seasonName: string;
   seasonDesc: string;

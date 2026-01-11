@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Search, Eye, X, Check } from 'lucide-react';
+import { Search, Eye, X, Check, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
 import { formatVND } from '../../../components/ui/utils';
+import { formatUtcDate } from '../../../utils/timeUtils';
+import { toast } from 'sonner';
 import {
   Select,
   SelectContent,
@@ -76,7 +79,10 @@ function getApprovedPreOrderIds(): string[] {
     const stored = localStorage.getItem(APPROVED_PREORDERS_KEY);
     return stored ? JSON.parse(stored) : [];
   } catch (error) {
-    console.error('Error reading approved pre-orders from local storage:', error);
+    console.error(
+      'Error reading approved pre-orders from local storage:',
+      error
+    );
     return [];
   }
 }
@@ -98,6 +104,42 @@ function isPreOrderApproved(orderId: string): boolean {
   return approvedIds.includes(orderId);
 }
 
+function getStatusBadgeVariant(
+  status: string
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+  switch (status) {
+    case 'Pending':
+      return 'secondary';
+    case 'Processing':
+      return 'default';
+    case 'Shipping':
+      return 'default';
+    case 'Delivered':
+      return 'outline';
+    case 'Canceled':
+      return 'destructive';
+    default:
+      return 'default';
+  }
+}
+
+function getStatusBadgeClassName(status: string): string {
+  switch (status) {
+    case 'Pending':
+      return 'bg-amber-100 text-amber-800 hover:bg-amber-100';
+    case 'Processing':
+      return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
+    case 'Shipping':
+      return 'bg-purple-100 text-purple-800 hover:bg-purple-100';
+    case 'Delivered':
+      return 'bg-green-100 text-green-800 hover:bg-green-100';
+    case 'Canceled':
+      return 'bg-red-100 text-red-800 hover:bg-red-100';
+    default:
+      return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
+  }
+}
+
 export function OrderList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -112,6 +154,9 @@ export function OrderList() {
   const [endDate, setEndDate] = useState<string>('');
   const [viewPreOrders, setViewPreOrders] = useState(false);
   const [approvingOrderId, setApprovingOrderId] = useState<string | null>(null);
+  const [processingOrderId, setProcessingOrderId] = useState<string | null>(
+    null
+  );
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [selectedPreOrderId, setSelectedPreOrderId] = useState<string | null>(
     null
@@ -131,85 +176,83 @@ export function OrderList() {
     'Canceled',
   ];
 
-  useEffect(() => {
-    const fetchFarmAndOrders = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchFarmAndOrders = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        // Get current farm
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No authentication token found');
-        }
-
-        const farmApi = axios.create({
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const farmResponse = await farmApi.get(API.farm.me);
-        if (!farmResponse.data.success || !farmResponse.data.data) {
-          throw new Error(
-            farmResponse.data.message || 'Failed to get farm info'
-          );
-        }
-
-        const currentFarmId = farmResponse.data.data.id;
-        console.log('Farm ID:', currentFarmId);
-
-        // Fetch orders for this farm
-        const ordersApi = axios.create({
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const ordersUrl = API.order.getByFarm(currentFarmId);
-        console.log('Fetching orders from:', ordersUrl);
-
-        const ordersResponse = await ordersApi.get(ordersUrl);
-        console.log('Orders response:', ordersResponse.data);
-
-        if (
-          ordersResponse.data.success &&
-          Array.isArray(ordersResponse.data.data)
-        ) {
-          setOrders(ordersResponse.data.data);
-        } else {
-          throw new Error(
-            ordersResponse.data.message || 'Invalid response format'
-          );
-        }
-
-        // Fetch pre-orders for this farm
-        const preOrdersUrl = API.order.getPreOrdersByFarm(currentFarmId);
-        console.log('Fetching pre-orders from:', preOrdersUrl);
-
-        const preOrdersResponse = await ordersApi.get(preOrdersUrl);
-        console.log('Pre-orders response:', preOrdersResponse.data);
-
-        if (
-          preOrdersResponse.data.success &&
-          Array.isArray(preOrdersResponse.data.data)
-        ) {
-          setPreOrders(preOrdersResponse.data.data);
-        } else {
-          setPreOrders([]);
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'An error occurred';
-        setError(errorMessage);
-        console.error('Failed to fetch orders:', errorMessage);
-        setOrders([]);
-        setPreOrders([]);
-      } finally {
-        setLoading(false);
+      // Get current farm
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
       }
-    };
 
+      const farmApi = axios.create({
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const farmResponse = await farmApi.get(API.farm.me);
+      if (!farmResponse.data.success || !farmResponse.data.data) {
+        throw new Error(farmResponse.data.message || 'Failed to get farm info');
+      }
+
+      const currentFarmId = farmResponse.data.data.id;
+      console.log('Farm ID:', currentFarmId);
+
+      // Fetch orders for this farm
+      const ordersApi = axios.create({
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const ordersUrl = API.order.getByFarm(currentFarmId);
+      console.log('Fetching orders from:', ordersUrl);
+
+      const ordersResponse = await ordersApi.get(ordersUrl);
+      console.log('Orders response:', ordersResponse.data);
+
+      if (
+        ordersResponse.data.success &&
+        Array.isArray(ordersResponse.data.data)
+      ) {
+        setOrders(ordersResponse.data.data);
+      } else {
+        throw new Error(
+          ordersResponse.data.message || 'Invalid response format'
+        );
+      }
+
+      // Fetch pre-orders for this farm
+      const preOrdersUrl = API.order.getPreOrdersByFarm(currentFarmId);
+      console.log('Fetching pre-orders from:', preOrdersUrl);
+
+      const preOrdersResponse = await ordersApi.get(preOrdersUrl);
+      console.log('Pre-orders response:', preOrdersResponse.data);
+
+      if (
+        preOrdersResponse.data.success &&
+        Array.isArray(preOrdersResponse.data.data)
+      ) {
+        setPreOrders(preOrdersResponse.data.data);
+      } else {
+        setPreOrders([]);
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'An error occurred';
+      setError(errorMessage);
+      console.error('Failed to fetch orders:', errorMessage);
+      setOrders([]);
+      setPreOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchFarmAndOrders();
   }, []);
 
@@ -256,6 +299,51 @@ export function OrderList() {
       console.error('Failed to update order status:', errorMessage);
     } finally {
       setUpdatingOrderId(null);
+    }
+  }
+
+  async function handleProcessOrder(orderId: string) {
+    try {
+      setProcessingOrderId(orderId);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const api = axios.create({
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const response = await api.patch(`${API.order.base}/${orderId}/process`);
+
+      if (response.data.success) {
+        toast.success('Order processed successfully');
+
+        const processOrderRes = response.data.data;
+
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.id === processOrderRes.orderId
+              ? {
+                  ...order,
+                  orderStatus:
+                    processOrderRes.newStatus as Order['orderStatus'],
+                }
+              : order
+          )
+        );
+      } else {
+        throw new Error(response.data.message || 'Failed to process order');
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'An error occurred';
+      toast.error(`Error: ${errorMessage}`);
+      console.error('Failed to process order:', errorMessage);
+    } finally {
+      setProcessingOrderId(null);
     }
   }
 
@@ -317,7 +405,7 @@ export function OrderList() {
       if (response.data.success) {
         // Save approved order ID to local storage
         addApprovedPreOrderId(selectedPreOrderId);
-        
+
         setPreOrders((prevPreOrders) =>
           prevPreOrders.filter((order) => order.id !== selectedPreOrderId)
         );
@@ -541,24 +629,44 @@ export function OrderList() {
         </div>
 
         {/* Table */}
-        <div className="border rounded-lg">
+        <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Order Code</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Date</TableHead>
+              <TableRow className="bg-gray-50 border-b hover:bg-gray-50">
+                <TableHead className="font-semibold text-gray-700">
+                  Order Code
+                </TableHead>
+                <TableHead className="font-semibold text-gray-700">
+                  Customer
+                </TableHead>
+                <TableHead className="font-semibold text-gray-700">
+                  Phone
+                </TableHead>
+                <TableHead className="font-semibold text-gray-700">
+                  Date
+                </TableHead>
                 {viewPreOrders ? (
-                  <TableHead>Quantity</TableHead>
+                  <TableHead className="font-semibold text-gray-700">
+                    Quantity
+                  </TableHead>
                 ) : (
                   <>
-                    <TableHead>Items</TableHead>
-                    <TableHead>Total Price</TableHead>
+                    <TableHead className="font-semibold text-gray-700">
+                      Items
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700">
+                      Total Price
+                    </TableHead>
                   </>
                 )}
-                {!viewPreOrders && <TableHead>Status</TableHead>}
-                <TableHead className="text-right">Actions</TableHead>
+                {!viewPreOrders && (
+                  <TableHead className="font-semibold text-gray-700">
+                    Status
+                  </TableHead>
+                )}
+                <TableHead className="text-right font-semibold text-gray-700">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -581,18 +689,27 @@ export function OrderList() {
                   </TableCell>
                 </TableRow>
               ) : (
-                currentOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">
+                currentOrders.map((order, index) => (
+                  <TableRow
+                    key={order.id}
+                    className={`border-b transition-colors ${
+                      index % 2 === 0 ? 'bg-white' : 'bg-green-300'
+                    } hover:bg-green-500`}
+                  >
+                    <TableCell className="font-medium text-gray-900">
                       {order.orderCode}
                     </TableCell>
-                    <TableCell>{order.customer.fullname}</TableCell>
-                    <TableCell>{order.customer.phone}</TableCell>
-                    <TableCell>
-                      {new Date(order.orderDate).toLocaleDateString()}
+                    <TableCell className="text-gray-700">
+                      {order.customer.fullname}
+                    </TableCell>
+                    <TableCell className="text-gray-700">
+                      {order.customer.phone}
+                    </TableCell>
+                    <TableCell className="text-gray-700">
+                      {formatUtcDate(order.orderDate)}
                     </TableCell>
                     {viewPreOrders ? (
-                      <TableCell className="text-center font-semibold">
+                      <TableCell className="text-center font-semibold text-gray-900">
                         {order.orderItems.reduce(
                           (sum, item) => sum + item.quantity,
                           0
@@ -600,34 +717,21 @@ export function OrderList() {
                       </TableCell>
                     ) : (
                       <>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center text-gray-700">
                           {order.orderItems.length}
                         </TableCell>
-                        <TableCell className="font-semibold">
+                        <TableCell className="font-semibold text-green-600">
                           {formatVND(order.totalPrice)}
                         </TableCell>
                       </>
                     )}
                     {!viewPreOrders && (
                       <TableCell>
-                        <Select
-                          value={order.orderStatus}
-                          onValueChange={(value) =>
-                            handleStatusChange(order.id, value)
-                          }
-                          disabled={updatingOrderId === order.id}
+                        <Badge
+                          className={getStatusBadgeClassName(order.orderStatus)}
                         >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {statusOptions.map((status) => (
-                              <SelectItem key={status} value={status}>
-                                {status}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          {order.orderStatus}
+                        </Badge>
                       </TableCell>
                     )}
                     <TableCell className="text-right">
@@ -637,31 +741,48 @@ export function OrderList() {
                           size="sm"
                           onClick={() => onViewDetails(order.id)}
                           disabled={
-                            updatingOrderId === order.id ||
+                            processingOrderId === order.id ||
                             approvingOrderId === order.id
                           }
                           title="View order details"
+                          className="hover:bg-blue-50"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-4 w-4 mr-1" />
+                          View Detail
                         </Button>
-                        {viewPreOrders && (
-                          isPreOrderApproved(order.id) ? (
+                        {!viewPreOrders && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleProcessOrder(order.id)}
+                            disabled={processingOrderId === order.id}
+                            className="bg-green-600 hover:bg-green-700"
+                            title="Process this order"
+                          >
+                            {processingOrderId === order.id && (
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            )}
+                            {processingOrderId !== order.id && 'Process Order'}
+                            {processingOrderId === order.id && 'Processing...'}
+                          </Button>
+                        )}
+                        {viewPreOrders &&
+                          (isPreOrderApproved(order.id) ? (
                             <span className="text-sm font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full">
                               Approved
                             </span>
                           ) : (
                             <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => handleOpenApproveModal(order.id)}
-                            disabled={approvingOrderId === order.id}
-                            className="bg-green-600 hover:bg-green-700 rounded-full"
-                            title="Approve pre-order"
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          )
-                        )}
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleOpenApproveModal(order.id)}
+                              disabled={approvingOrderId === order.id}
+                              className="bg-green-600 hover:bg-green-700 rounded-full"
+                              title="Approve pre-order"
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                          ))}
                       </div>
                     </TableCell>
                   </TableRow>

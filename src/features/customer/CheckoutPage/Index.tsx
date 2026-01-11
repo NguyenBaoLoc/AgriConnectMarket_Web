@@ -1,23 +1,30 @@
-import { useState, useEffect } from "react";
-import { Button } from "../../../components/ui/button";
-import { Card } from "../../../components/ui/card";
-import { Label } from "../../../components/ui/label";
-import { RadioGroup, RadioGroupItem } from "../../../components/ui/radio-group";
-import { ArrowLeft, Building2, MapPin, Loader } from "lucide-react";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import { getCartItems } from "../CartPage/api";
-import { Footer } from "../components";
-import { formatVND } from "../../../components/ui/utils";
+import { useState, useEffect } from 'react';
+import { Button } from '../../../components/ui/button';
+import { Card } from '../../../components/ui/card';
+import { Label } from '../../../components/ui/label';
+import { RadioGroup, RadioGroupItem } from '../../../components/ui/radio-group';
+import {
+  ArrowLeft,
+  Building2,
+  MapPin,
+  Loader,
+  ShoppingCart,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { getCartItems } from '../CartPage/api';
+import { Footer } from '../components';
+import { formatVND } from '../../../components/ui/utils';
 import {
   getAddresses,
   getShippingFee,
   createOrder,
   initiatePayment,
-} from "./api";
-import { useVNPayment } from "../../../hooks/useVNPayment";
-import type { CartData } from "../CartPage/types";
-import type { Address, FarmShippingFee } from "./types";
+} from './api';
+import { useVNPayment } from '../../../hooks/useVNPayment';
+import type { CartData } from '../CartPage/types';
+import type { Address, FarmShippingFee } from './types';
+import { formatUtcDate } from '../../../utils/timeUtils';
 
 interface CheckoutPageProps {
   onBack: () => void;
@@ -25,30 +32,82 @@ interface CheckoutPageProps {
 
 export function CheckoutPage({ onBack }: CheckoutPageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { openPaymentURL } = useVNPayment();
   const [cartData, setCartData] = useState<CartData | null>(null);
+  const [filteredCartData, setFilteredCartData] = useState<CartData | null>(
+    null
+  );
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [farmShippingFees, setFarmShippingFees] = useState<
     Map<string, FarmShippingFee>
   >(new Map());
-  const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [paymentMethod, setPaymentMethod] = useState('cod');
   const [loading, setLoading] = useState(true);
   const [calculatingShipping, setCalculatingShipping] = useState(false);
   const [submittingOrder, setSubmittingOrder] = useState(false);
+
+  // Get selected item IDs from location state
+  const selectedItemIds = (location.state as any)?.selectedItemIds as
+    | string[]
+    | undefined;
+
+  // Get Buy Now product from location state
+  const isBuyNow = (location.state as any)?.isBuyNow as boolean | undefined;
+  const buyNowProduct = (location.state as any)?.buyNowProduct as
+    | any
+    | undefined;
 
   // Load cart and addresses on mount
   useEffect(() => {
     const loadCheckoutData = async () => {
       try {
         setLoading(true);
-        const cartResponse = await getCartItems();
-        if (cartResponse.success && cartResponse.data) {
-          setCartData(cartResponse.data);
+
+        // If this is a Buy Now flow, create synthetic cart data
+        if (isBuyNow && buyNowProduct) {
+          // Create a synthetic CartData object from the Buy Now product
+          const syntheticCartData: CartData = {
+            cartId: 'buynow-' + Date.now(),
+            totalPrice: buyNowProduct.price * buyNowProduct.quantity,
+            fullname: '',
+            email: '',
+            phone: '',
+            cartItems: [
+              {
+                farmId: 'unknown',
+                farmName: 'Farm',
+                items: [
+                  {
+                    itemId: 'buynow-' + buyNowProduct.batchId,
+                    batchId: buyNowProduct.batchId,
+                    batchCode: buyNowProduct.batchId,
+                    batchImageUrls: [],
+                    productName: buyNowProduct.productName,
+                    categoryName: '',
+                    seasonName: '',
+                    batchPrice: buyNowProduct.price,
+                    quantity: buyNowProduct.quantity,
+                    units: buyNowProduct.units,
+                    itemPrice: buyNowProduct.price * buyNowProduct.quantity,
+                    seasonStatus: '',
+                  },
+                ],
+              },
+            ],
+          };
+          setCartData(syntheticCartData);
         } else {
-          toast.error(cartResponse.message || "Failed to load cart");
-          navigate("/cart");
-          return;
+          // Normal flow: load cart from API
+          const cartResponse = await getCartItems();
+          if (cartResponse.success && cartResponse.data) {
+            setCartData(cartResponse.data);
+          } else {
+            toast.error(cartResponse.message || 'Failed to load cart');
+            navigate('/cart');
+            return;
+          }
         }
 
         const addressResponse = await getAddresses();
@@ -58,35 +117,68 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
             setSelectedAddressId(addressResponse.data[0].id);
           }
         } else {
-          toast.error(addressResponse.message || "Failed to load addresses");
+          toast.error(addressResponse.message || 'Failed to load addresses');
         }
       } catch (error) {
-        console.error("Error loading checkout data:", error);
-        toast.error("Failed to load checkout data");
-        navigate("/cart");
+        console.error('Error loading checkout data:', error);
+        toast.error('Failed to load checkout data');
+        navigate('/cart');
       } finally {
         setLoading(false);
       }
     };
 
     loadCheckoutData();
-  }, [navigate]);
+  }, [navigate, isBuyNow, buyNowProduct]);
 
-  // Calculate shipping fees when address changes or cart updates
+  // Filter cart data based on selected items from cart page
   useEffect(() => {
-    if (cartData && selectedAddressId) {
+    if (!cartData) return;
+
+    // If no selected items provided, show all items (backward compatibility)
+    if (!selectedItemIds || selectedItemIds.length === 0) {
+      setFilteredCartData(cartData);
+      return;
+    }
+
+    const selectedItemSet = new Set(selectedItemIds);
+
+    // Filter cart items to only include selected items
+    const filteredItems = cartData.cartItems
+      .map((farm) => ({
+        ...farm,
+        items: farm.items.filter((item) => selectedItemSet.has(item.itemId)),
+      }))
+      .filter((farm) => farm.items.length > 0);
+
+    // Calculate filtered total price
+    const filteredTotalPrice = filteredItems.reduce(
+      (total, farm) =>
+        total +
+        farm.items.reduce((farmTotal, item) => farmTotal + item.itemPrice, 0),
+      0
+    );
+
+    setFilteredCartData({
+      ...cartData,
+      cartItems: filteredItems,
+      totalPrice: filteredTotalPrice,
+    });
+  }, [cartData, selectedItemIds]); // Calculate shipping fees when address changes or cart updates
+  useEffect(() => {
+    if (filteredCartData && selectedAddressId) {
       calculateShippingFees();
     }
-  }, [selectedAddressId, cartData]);
+  }, [selectedAddressId, filteredCartData]);
 
   const calculateShippingFees = async () => {
-    if (!cartData || !selectedAddressId) return;
+    if (!filteredCartData || !selectedAddressId) return;
 
     setCalculatingShipping(true);
     const newFees = new Map<string, FarmShippingFee>();
 
     try {
-      for (const farm of cartData.cartItems) {
+      for (const farm of filteredCartData.cartItems) {
         // Calculate total weight (quantity) for this farm
         const totalWeight = farm.items.reduce(
           (sum, item) => sum + item.quantity,
@@ -122,7 +214,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
               farmName: farm.farmName,
               fee: 0,
               isLoading: false,
-              error: feeResponse.message || "Failed to calculate shipping fee",
+              error: feeResponse.message || 'Failed to calculate shipping fee',
             });
           }
         } catch (error) {
@@ -135,7 +227,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
             farmName: farm.farmName,
             fee: 0,
             isLoading: false,
-            error: "Failed to calculate shipping fee",
+            error: 'Failed to calculate shipping fee',
           });
         }
       }
@@ -155,7 +247,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
   };
 
   const getTotalPrice = () => {
-    const subtotal = cartData?.totalPrice || 0;
+    const subtotal = filteredCartData?.totalPrice || 0;
     const shipping = getTotalShippingFee();
     return subtotal + shipping;
   };
@@ -164,129 +256,172 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
     e.preventDefault();
 
     if (!selectedAddressId) {
-      toast.error("Please select a delivery address");
+      toast.error('Please select a delivery address');
       return;
     }
 
     setSubmittingOrder(true);
 
     try {
-      const customerId = localStorage.getItem("userId");
+      const customerId = localStorage.getItem('userId');
       if (!customerId) {
-        toast.error("User ID not found. Please login again.");
+        toast.error('User ID not found. Please login again.');
         setSubmittingOrder(false);
         return;
       }
 
-      // Generate order code
-      const orderCode = `ORD-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)
-        .toUpperCase()}`;
-
-      // Calculate total shipping fee
-      const totalShippingFee = getTotalShippingFee();
-
       // Map payment method to API value
       const paymentMethodValue =
-        paymentMethod === "bank" ? "Bank Transfer (VNPay)" : "Cash on Delivery";
+        paymentMethod === 'bank' ? 'Bank Transfer (VNPay)' : 'Cash on Delivery';
 
-      // Prepare order items
-      const orderItems = cartData!.cartItems.flatMap((farm) =>
-        farm.items.map((item) => ({
-          batchId: item.batchId,
-          quantity: item.quantity,
-        }))
-      );
+      // Create orders for each farm separately
+      const createdOrders: any[] = [];
+      const totalShippingFee = getTotalShippingFee();
 
-      // Prepare order payload
-      const orderPayload = {
-        customerId,
-        addressId: selectedAddressId,
-        orderCode,
-        orderDate: new Date().toISOString(),
-        orderType: "order",
-        shippingFee: totalShippingFee,
-        paymentMethod: paymentMethodValue,
-        orderItems,
-      };
+      for (const farm of filteredCartData!.cartItems) {
+        try {
+          // Generate unique order code for each farm
+          const orderCode = `ORD-${Date.now()}-${Math.random()
+            .toString(36)
+            .substr(2, 9)
+            .toUpperCase()}`;
 
-      console.log("Creating order with payload:", orderPayload);
+          // Get shipping fee for this farm
+          const farmShippingFee = farmShippingFees.get(farm.farmId)?.fee || 0;
 
-      // Call create order API
-      const response = await createOrder(orderPayload);
+          // Prepare order items for this farm
+          const orderItems = farm.items.map((item) => ({
+            batchId: item.batchId,
+            quantity: item.quantity,
+          }));
 
-      console.log("Create order response:", response);
+          // Calculate total price for this farm
+          const farmTotal = farm.items.reduce(
+            (sum, item) => sum + item.itemPrice,
+            0
+          );
 
-      if (response.success && response.data) {
-        const orderData = response.data as any;
+          // Prepare order payload for this farm
+          const orderPayload = {
+            customerId,
+            addressId: selectedAddressId,
+            orderCode,
+            orderDate: new Date().toISOString(),
+            orderType: 'order',
+            shippingFee: farmShippingFee,
+            paymentMethod: paymentMethodValue,
+            orderItems,
+          };
 
-        // If payment method is Bank Transfer (VNPay), initiate payment
-        if (paymentMethod === "bank") {
+          console.log(`Creating order for farm ${farm.farmId}:`, orderPayload);
+
+          // Call create order API for this farm
+          const response = await createOrder(orderPayload);
+
+          console.log(`Order response for farm ${farm.farmId}:`, response);
+
+          if (response.success && response.data) {
+            createdOrders.push({
+              ...response.data,
+              farmId: farm.farmId,
+              farmName: farm.farmName,
+            });
+          } else {
+            toast.error(
+              `Failed to create order for ${farm.farmName}: ${response.message}`
+            );
+            setSubmittingOrder(false);
+            return;
+          }
+        } catch (error) {
+          console.error(`Error creating order for farm ${farm.farmId}:`, error);
+          toast.error(`Failed to create order for ${farm.farmName}`);
+          setSubmittingOrder(false);
+          return;
+        }
+      }
+
+      // All orders created successfully
+      if (createdOrders.length > 0) {
+        const firstOrder = createdOrders[0];
+
+        // If payment method is Bank Transfer (VNPay), initiate payment for the first order
+        if (paymentMethod === 'bank') {
           try {
-            // Try different possible field names for order ID
-            const orderId = orderData.orderId;
-            console.log("Using orderId:", orderId);
-            const paymentResponse = await initiatePayment(orderId);
+            // Use the first order ID for payment initiation
+            const orderIds = createdOrders.map((item) => item.orderId);
+            console.log('Using orderId for payment:', orderIds);
+            const paymentResponse = await initiatePayment(orderIds);
 
-            console.log("Payment response:", paymentResponse);
+            console.log('Payment response:', paymentResponse);
 
             if (paymentResponse.success && paymentResponse.data?.paymentUrl) {
-              // Store order code in session storage for verification
-              sessionStorage.setItem("vnp_orderCode", orderData.orderCode);
+              // Store all order codes in comma-separated string for verification
+              // Each order code format: "ORD-{timestamp}-{random}"
+              const orderCodesString = createdOrders
+                .map((o) => o.orderCode)
+                .join(',');
+              sessionStorage.setItem('vnp_orderCodes', orderCodesString);
 
               // Open payment URL in new tab
               openPaymentURL(paymentResponse.data.paymentUrl);
 
               // Navigate current tab to order-payment with processing state
-              navigate("/order-payment", {
+              navigate('/order-payment', {
                 state: {
-                  orderCode: orderData.orderCode,
-                  orderData: orderData,
+                  orderCode: orderCodesString,
+                  orderCodes: createdOrders.map((o) => o.orderCode),
+                  orderData: firstOrder,
+                  allOrders: createdOrders,
                 },
               });
             } else {
               toast.error(
-                paymentResponse.message || "Failed to initiate payment"
+                paymentResponse.message || 'Failed to initiate payment'
               );
             }
           } catch (paymentError) {
-            console.error("Error initiating payment:", paymentError);
-            toast.error("Failed to initiate payment. Please try again.");
+            console.error('Error initiating payment:', paymentError);
+            toast.error('Failed to initiate payment. Please try again.');
           }
         } else {
           // For Cash on Delivery, navigate directly to order confirmation
-          toast.success("Order placed successfully!");
-          navigate("/order-confirmation", {
+          toast.success('Orders placed successfully!');
+          navigate('/order-confirmation', {
             state: {
-              orderId: orderData.orderId,
-              orderCode: orderData.orderCode,
-              orderDate: orderData.orderDate,
-              totalPrice: orderData.totalPrice,
-              shippingFee: orderData.shippingFee,
-              customerName: orderData.customer?.fullname || "Customer",
-              customerEmail: orderData.customer?.email || "",
-              customerPhone: orderData.customer?.phone || "",
-              orderStatus: orderData.orderStatus || "Pending",
-              paymentStatus: orderData.paymentStatus || "Pending",
-              paymentMethod: orderData.paymentMethod || "Cash on Delivery",
+              orderId: firstOrder.id,
+              orderCode: firstOrder.orderCode,
+              orderDate: firstOrder.orderDate,
+              totalPrice: createdOrders.reduce(
+                (sum, order) => sum + order.totalPrice,
+                0
+              ),
+              shippingFee: createdOrders.reduce(
+                (sum, order) => sum + order.shippingFee,
+                0
+              ),
+              customerName: firstOrder.customer?.fullname || 'Customer',
+              customerEmail: firstOrder.customer?.email || '',
+              customerPhone: firstOrder.customer?.phone || '',
+              orderStatus: firstOrder.orderStatus || 'Pending',
+              paymentStatus: firstOrder.paymentStatus || 'Pending',
+              paymentMethod: firstOrder.paymentMethod || 'Cash on Delivery',
               shippingAddress: {
-                detail: orderData.address?.detail || "",
-                ward: orderData.address?.ward || "",
-                district: orderData.address?.district || "",
-                province: orderData.address?.province || "",
+                detail: firstOrder.address?.detail || '',
+                ward: firstOrder.address?.ward || '',
+                district: firstOrder.address?.district || '',
+                province: firstOrder.address?.province || '',
               },
-              orderItems: orderData.orderItems || [],
+              orderItems: createdOrders.flatMap((o) => o.orderItems || []),
+              allOrders: createdOrders,
             },
           });
         }
-      } else {
-        toast.error(response.message || "Failed to place order");
       }
     } catch (error) {
-      console.error("Error placing order:", error);
+      console.error('Error placing orders:', error);
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to place order";
+        error instanceof Error ? error.message : 'Failed to place orders';
       toast.error(errorMessage);
     } finally {
       setSubmittingOrder(false);
@@ -317,22 +452,144 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
     );
   }
 
-  return (
-    <div>
+  if (!filteredCartData) {
+    return (
       <div className="container mx-auto px-4 py-8">
-        <Button variant="ghost" onClick={onBack} className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Cart
-        </Button>
+        <div className="text-center py-12">
+          <p className="text-gray-500 mb-4">No items selected in your cart</p>
+          <Button onClick={onBack}>Back to Cart</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <Button variant="ghost" onClick={onBack} className="mb-6">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Cart
+          </Button>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-green-500">Checkout</h1>
+            <div className="text-right">
+              <p className="text-sm text-gray-600">Order Summary</p>
+              <p className="text-2xl font-bold text-green-600">
+                {formatVND(getTotalPrice())}
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Checkout Form */}
+          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Order Items Section */}
+            <Card className="p-6 border-0 shadow-md">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <ShoppingCart className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Your Items
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    {filteredCartData?.cartItems.reduce(
+                      (total, farm) => total + farm.items.length,
+                      0
+                    )}{' '}
+                    items from {filteredCartData?.cartItems.length || 0} farm
+                    {(filteredCartData?.cartItems.length || 0) !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+
+              {/* Items by Farm */}
+              <div className="space-y-6">
+                {filteredCartData?.cartItems.map((farm) => (
+                  <div key={farm.farmId}>
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-green-100">
+                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                      <h3 className="font-semibold text-gray-900">
+                        {farm.farmName}
+                      </h3>
+                    </div>
+                    <div className="space-y-3 pl-4">
+                      {farm.items.map((item) => (
+                        <div
+                          key={item.itemId}
+                          className="flex gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                        >
+                          {/* Product Image */}
+                          <div className="flex-shrink-0">
+                            {item.batchImageUrls.length > 0 ? (
+                              <img
+                                src={item.batchImageUrls[0]}
+                                alt={item.productName}
+                                className="w-20 h-20 object-cover rounded-lg"
+                              />
+                            ) : (
+                              <div className="w-20 h-20 bg-gray-300 rounded-lg flex items-center justify-center">
+                                <ShoppingCart className="h-8 w-8 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Product Details */}
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900 mb-1">
+                              {item.productName}
+                            </h4>
+                            <p className="text-xs text-gray-600 mb-2">
+                              {item.categoryName} • {item.seasonName}
+                            </p>
+                            <p className="text-xs text-gray-500 mb-2">
+                              Batch: {item.batchCode}
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-xs text-gray-600">
+                                  {formatVND(item.batchPrice)} / {item.units}
+                                </p>
+                                <p className="text-xs font-medium text-green-600 mt-1">
+                                  Qty: {item.quantity} {item.units}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs text-gray-600">
+                                  Subtotal
+                                </p>
+                                <p className="text-lg font-semibold text-gray-900">
+                                  {formatVND(item.itemPrice)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
             {/* Delivery Address Section */}
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <MapPin className="h-5 w-5 text-green-600" />
-                <h2>Delivery Address</h2>
+            <Card className="p-6 border-0 shadow-md">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <MapPin className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Delivery Address
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    Select where to deliver
+                  </p>
+                </div>
               </div>
 
               {addresses.length === 0 ? (
@@ -353,21 +610,26 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
                     {addresses.map((address) => (
                       <div
                         key={address.id}
-                        className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-green-600 cursor-pointer"
+                        className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition cursor-pointer ${
+                          selectedAddressId === address.id
+                            ? 'border-green-600 bg-green-50'
+                            : 'border-gray-200 bg-white hover:border-green-300'
+                        }`}
                       >
                         <RadioGroupItem value={address.id} id={address.id} />
                         <Label
                           htmlFor={address.id}
                           className="cursor-pointer flex-1 flex items-center gap-3"
                         >
-                          <MapPin className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <MapPin className="h-4 w-4 text-blue-600" />
+                          </div>
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900">
+                            <p className="font-semibold text-gray-900">
                               {address.detail}
                             </p>
                             <p className="text-xs text-gray-500">
-                              Added on{" "}
-                              {new Date(address.createdAt).toLocaleDateString()}
+                              Added on {formatUtcDate(address.createdAt)}
                             </p>
                           </div>
                         </Label>
@@ -380,11 +642,13 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
 
             {/* Shipping Fees Overview */}
             {selectedAddressId && (
-              <Card className="p-6 bg-blue-50 border-blue-200">
-                <div className="flex items-center gap-2 mb-4">
-                  <Loader className="h-5 w-5 text-blue-600" />
-                  <h3 className="font-semibold text-blue-900">
-                    Shipping Fees by Farm
+              <Card className="p-6 border-0 shadow-md bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200">
+                <div className="flex items-center gap-3 mb-4 pb-4 border-b border-blue-200">
+                  <div className="p-3 bg-white rounded-lg">
+                    <Loader className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h3 className="font-bold text-blue-900 text-lg">
+                    Shipping Information
                   </h3>
                 </div>
 
@@ -396,36 +660,40 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    {cartData.cartItems.map((farm) => {
+                  <div className="space-y-3">
+                    {filteredCartData?.cartItems.map((farm) => {
                       const feeData = farmShippingFees.get(farm.farmId);
-                      console.log("Rendering shipping fee for farm:", feeData);
                       return (
                         <div
                           key={farm.farmId}
-                          className="flex justify-between items-center p-2 bg-white rounded border border-blue-100"
+                          className="flex justify-between items-center p-3 bg-white rounded-lg border border-blue-100 hover:shadow-sm transition"
                         >
                           <div className="flex-1">
-                            <p className="font-medium text-gray-800">
+                            <p className="font-semibold text-gray-900">
                               {farm.farmName}
                             </p>
-                            <p className="text-xs text-gray-600">
+                            <p className="text-xs text-gray-500">
                               {farm.items.reduce(
                                 (sum, item) => sum + item.quantity,
                                 0
-                              )}{" "}
-                              items
+                              )}{' '}
+                              items -{' '}
+                              {farm.items.reduce(
+                                (sum, item) => sum + item.quantity,
+                                0
+                              )}{' '}
+                              kg
                             </p>
                           </div>
                           <div className="text-right">
                             {feeData?.isLoading ? (
                               <Loader className="h-4 w-4 animate-spin text-blue-600" />
                             ) : feeData?.error ? (
-                              <span className="text-xs text-red-600">
+                              <span className="text-xs text-red-600 font-medium">
                                 Error
                               </span>
                             ) : (
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-bold text-gray-900 text-lg">
                                 {formatVND(feeData?.fee || 0)}
                               </p>
                             )}
@@ -439,155 +707,225 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
             )}
 
             {/* Payment Method */}
-            <Card className="p-6">
-              <h2 className="mb-4">Payment Method</h2>
+            <Card className="p-6 border-0 shadow-md">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Building2 className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Payment Method
+                  </h2>
+                  <p className="text-sm text-gray-600">Choose how to pay</p>
+                </div>
+              </div>
 
               <RadioGroup
                 value={paymentMethod}
                 onValueChange={setPaymentMethod}
                 className="space-y-3"
               >
-                <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-green-600 cursor-pointer">
+                <div
+                  className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition cursor-pointer ${
+                    paymentMethod === 'bank'
+                      ? 'border-purple-600 bg-purple-50'
+                      : 'border-gray-200 bg-white hover:border-purple-300'
+                  }`}
+                >
                   <RadioGroupItem value="bank" id="bank" />
                   <Label
                     htmlFor="bank"
-                    className="flex items-center gap-2 cursor-pointer flex-1"
+                    className="flex items-center gap-3 cursor-pointer flex-1"
                   >
-                    <Building2 className="h-5 w-5 text-gray-600" />
-                    <span>Bank Transfer (VNPay)</span>
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Building2 className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        Bank Transfer (VNPay)
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        Pay securely online
+                      </p>
+                    </div>
                   </Label>
                 </div>
 
-                <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-green-600 cursor-pointer">
+                <div
+                  className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition cursor-pointer ${
+                    paymentMethod === 'cod'
+                      ? 'border-green-600 bg-green-50'
+                      : 'border-gray-200 bg-white hover:border-green-300'
+                  }`}
+                >
                   <RadioGroupItem value="cod" id="cod" />
                   <Label
                     htmlFor="cod"
-                    className="flex items-center gap-2 cursor-pointer flex-1"
+                    className="flex items-center gap-3 cursor-pointer flex-1"
                   >
-                    <span>Cash on Delivery</span>
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <span className="text-lg">💰</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        Cash on Delivery
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        Pay when you receive
+                      </p>
+                    </div>
                   </Label>
                 </div>
               </RadioGroup>
             </Card>
           </div>
 
-          {/* Order Summary */}
+          {/* Sidebar - Order Summary & Action */}
           <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-24">
-              <h3 className="mb-4 font-semibold">Order Summary</h3>
+            <div className="sticky top-24 space-y-6">
+              {/* Price Summary Card */}
+              <Card className="p-6 border-0 shadow-md">
+                <h3 className="text-lg font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
+                  Price Summary
+                </h3>
 
-              {/* Items by Farm */}
-              <div className="space-y-4 mb-4 pb-4 border-b border-gray-200">
-                {cartData.cartItems.map((farm) => (
-                  <div key={farm.farmId}>
-                    <p className="text-sm font-medium text-green-600 mb-2">
-                      {farm.farmName}
-                    </p>
-                    <div className="space-y-1 ml-2">
-                      {farm.items.map((item) => (
-                        <div
-                          key={item.itemId}
-                          className="flex justify-between text-xs"
-                        >
-                          <span className="text-gray-600">
-                            {item.productName} x {item.quantity}
-                          </span>
-                          <span className="text-gray-900">
-                            {formatVND(item.itemPrice)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                {/* Subtotal */}
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Subtotal</span>
+                    <span className="font-semibold text-gray-900">
+                      {formatVND(filteredCartData?.totalPrice || 0)}
+                    </span>
                   </div>
-                ))}
-              </div>
 
-              {/* Cost Breakdown */}
-              <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="text-gray-900">
-                    {formatVND(cartData?.totalPrice || 0)}
-                  </span>
+                  {/* Shipping Fees */}
+                  {filteredCartData?.cartItems.map((farm) => {
+                    const feeData = farmShippingFees.get(farm.farmId);
+                    return (
+                      <div
+                        key={farm.farmId}
+                        className="flex justify-between items-center text-sm"
+                      >
+                        <span className="text-gray-600">
+                          Shipping ({farm.farmName})
+                        </span>
+                        <span className="text-gray-900">
+                          {feeData?.isLoading ? (
+                            <Loader className="h-3 w-3 animate-spin inline" />
+                          ) : (
+                            formatVND(feeData?.fee || 0)
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* Shipping Fees */}
-                {cartData.cartItems.map((farm) => {
-                  const feeData = farmShippingFees.get(farm.farmId);
-                  return (
-                    <div
-                      key={farm.farmId}
-                      className="flex justify-between text-xs"
-                    >
-                      <span className="text-gray-600">
-                        Shipping ({farm.farmName})
-                      </span>
-                      <span className="text-gray-900">
-                        {feeData?.isLoading ? (
-                          <Loader className="h-3 w-3 animate-spin inline" />
-                        ) : (
-                          formatVND(feeData?.fee || 0)
-                        )}
-                      </span>
+                {/* Total */}
+                <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-200 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-gray-900">Total</span>
+                    <span className="text-2xl font-bold text-green-600">
+                      {formatVND(getTotalPrice())}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Customer Info */}
+                <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Customer Name</p>
+                    <p className="font-semibold text-gray-900 text-sm">
+                      {cartData.fullname}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Email</p>
+                    <p className="font-semibold text-gray-900 text-sm break-all">
+                      {cartData.email}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Phone</p>
+                    <p className="font-semibold text-gray-900 text-sm">
+                      {cartData.phone}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Place Order Button */}
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 text-base rounded-lg"
+                  onClick={handleSubmit}
+                  disabled={
+                    calculatingShipping || !selectedAddressId || submittingOrder
+                  }
+                >
+                  {submittingOrder ? (
+                    <>
+                      <Loader className="h-5 w-5 animate-spin mr-2" />
+                      Creating Order...
+                    </>
+                  ) : calculatingShipping ? (
+                    <>
+                      <Loader className="h-5 w-5 animate-spin mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Place Order'
+                  )}
+                </Button>
+
+                <p className="text-xs text-gray-500 mt-4 text-center">
+                  By placing your order, you agree to our{' '}
+                  <a href="#" className="text-green-600 hover:underline">
+                    terms and conditions
+                  </a>
+                </p>
+              </Card>
+
+              {/* Security Info */}
+              <Card className="p-4 border-0 shadow-md bg-gradient-to-br from-blue-50 to-cyan-50">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-100 rounded-full">
+                      <svg
+                        className="h-4 w-4 text-blue-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Total */}
-              <div className="flex justify-between mb-6">
-                <span className="font-semibold text-gray-900">Total</span>
-                <span className="text-lg font-semibold text-green-600">
-                  {formatVND(getTotalPrice())}
-                </span>
-              </div>
-
-              <Button
-                className="w-full bg-green-600 hover:bg-green-700"
-                onClick={handleSubmit}
-                disabled={
-                  calculatingShipping || !selectedAddressId || submittingOrder
-                }
-              >
-                {submittingOrder ? (
-                  <>
-                    <Loader className="h-4 w-4 animate-spin mr-2" />
-                    Creating Order...
-                  </>
-                ) : calculatingShipping ? (
-                  <>
-                    <Loader className="h-4 w-4 animate-spin mr-2" />
-                    Processing...
-                  </>
-                ) : (
-                  "Place Order"
-                )}
-              </Button>
-
-              <p className="text-xs text-gray-500 mt-4 text-center">
-                By placing your order, you agree to our terms and conditions
-              </p>
-
-              {/* Customer Info Display */}
-              <div className="mt-6 pt-4 border-t border-gray-200 space-y-2">
-                <div className="text-xs">
-                  <p className="text-gray-600">Customer Name</p>
-                  <p className="font-medium text-gray-900">
-                    {cartData.fullname}
-                  </p>
+                    <span className="text-xs font-semibold text-gray-900">
+                      Secure Payment
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-green-100 rounded-full">
+                      <svg
+                        className="h-4 w-4 text-green-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-semibold text-gray-900">
+                      Money-back Guarantee
+                    </span>
+                  </div>
                 </div>
-                <div className="text-xs">
-                  <p className="text-gray-600">Email</p>
-                  <p className="font-medium text-gray-900 break-all">
-                    {cartData.email}
-                  </p>
-                </div>
-                <div className="text-xs">
-                  <p className="text-gray-600">Phone</p>
-                  <p className="font-medium text-gray-900">{cartData.phone}</p>
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </div>
         </div>
       </div>

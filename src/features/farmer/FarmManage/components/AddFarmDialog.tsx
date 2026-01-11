@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { X, Upload } from "lucide-react";
-import { Button } from "../../../../components/ui/button";
+import { useEffect, useState } from 'react';
+import { X, Upload } from 'lucide-react';
+import { Button } from '../../../../components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,20 +8,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../../components/ui/dialog";
+} from '../../../../components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../../components/ui/select";
-import { Input } from "../../../../components/ui/input";
-import { Label } from "../../../../components/ui/label";
-import { Textarea } from "../../../../components/ui/textarea";
-import { toast } from "sonner";
-import { createFarm, getProvinces, getDistricts, getWards } from "../api";
-import type { Province, District, Ward } from "../types";
+} from '../../../../components/ui/select';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
+import { Textarea } from '../../../../components/ui/textarea';
+import { toast } from 'sonner';
+import { createFarm, getProvinces, getDistricts, getWards } from '../api';
+import type { Province, District, Ward } from '../types';
 
 interface AddFarmDialogProps {
   open: boolean;
@@ -39,24 +39,24 @@ export function AddFarmDialog({
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
   // Form fields
-  const [farmName, setFarmName] = useState("");
-  const [farmDesc, setFarmDesc] = useState("");
-  const [batchCodePrefix, setBatchCodePrefix] = useState("");
-  const [phone, setPhone] = useState("");
-  const [area, setArea] = useState("");
-  const [detail, setDetail] = useState("");
+  const [farmName, setFarmName] = useState('');
+  const [farmDesc, setFarmDesc] = useState('');
+  const [batchCodePrefix, setBatchCodePrefix] = useState('');
+  const [phone, setPhone] = useState('');
+  const [area, setArea] = useState('');
+  const [detail, setDetail] = useState('');
 
   // Location fields
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
 
-  const [selectedProvince, setSelectedProvince] = useState("");
-  const [selectedProvinceName, setSelectedProvinceName] = useState("");
-  const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [selectedDistrictName, setSelectedDistrictName] = useState("");
-  const [selectedWard, setSelectedWard] = useState("");
-  const [selectedWardName, setSelectedWardName] = useState("");
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [selectedProvinceName, setSelectedProvinceName] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [selectedDistrictName, setSelectedDistrictName] = useState('');
+  const [selectedWard, setSelectedWard] = useState('');
+  const [selectedWardName, setSelectedWardName] = useState('');
 
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(false);
   const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
@@ -72,10 +72,10 @@ export function AddFarmDialog({
   // Load districts when province changes
   useEffect(() => {
     if (selectedProvince) {
-      setSelectedDistrict("");
-      setSelectedDistrictName("");
-      setSelectedWard("");
-      setSelectedWardName("");
+      setSelectedDistrict('');
+      setSelectedDistrictName('');
+      setSelectedWard('');
+      setSelectedWardName('');
       setDistricts([]);
       setWards([]);
       fetchDistricts(selectedProvince);
@@ -85,8 +85,8 @@ export function AddFarmDialog({
   // Load wards when district changes
   useEffect(() => {
     if (selectedDistrict) {
-      setSelectedWard("");
-      setSelectedWardName("");
+      setSelectedWard('');
+      setSelectedWardName('');
       setWards([]);
       fetchWards(selectedDistrict);
     }
@@ -98,8 +98,8 @@ export function AddFarmDialog({
       const data = await getProvinces();
       setProvinces(data);
     } catch (error) {
-      console.error("Error fetching provinces:", error);
-      toast.error("Failed to load provinces");
+      console.error('Error fetching provinces:', error);
+      toast.error('Failed to load provinces');
     } finally {
       setIsLoadingProvinces(false);
     }
@@ -111,8 +111,8 @@ export function AddFarmDialog({
       const data = await getDistricts(provinceCode);
       setDistricts(data);
     } catch (error) {
-      console.error("Error fetching districts:", error);
-      toast.error("Failed to load districts");
+      console.error('Error fetching districts:', error);
+      toast.error('Failed to load districts');
     } finally {
       setIsLoadingDistricts(false);
     }
@@ -124,8 +124,8 @@ export function AddFarmDialog({
       const data = await getWards(districtCode);
       setWards(data);
     } catch (error) {
-      console.error("Error fetching wards:", error);
-      toast.error("Failed to load wards");
+      console.error('Error fetching wards:', error);
+      toast.error('Failed to load wards');
     } finally {
       setIsLoadingWards(false);
     }
@@ -134,12 +134,12 @@ export function AddFarmDialog({
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith("image/")) {
-        toast.error("Please select a valid image file");
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
-        toast.error("Image size must be less than 10MB");
+        toast.error('Image size must be less than 10MB');
         return;
       }
       setBannerFile(file);
@@ -169,13 +169,13 @@ export function AddFarmDialog({
       !selectedDistrict ||
       !selectedWard
     ) {
-      toast.error("Please fill in all required fields");
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    const farmerId = localStorage.getItem("accountId");
+    const farmerId = localStorage.getItem('accountId');
     if (!farmerId) {
-      toast.error("Unable to get farmer information. Please login again.");
+      toast.error('Unable to get farmer information. Please login again.');
       return;
     }
 
@@ -198,34 +198,34 @@ export function AddFarmDialog({
       );
 
       if (response.success) {
-        toast.success("Farm created successfully!");
+        toast.success('Farm created successfully!');
         resetForm();
         onOpenChange(false);
         onFarmAdded?.();
       } else {
-        toast.error(response.message || "Failed to create farm");
+        toast.error(response.message || 'Failed to create farm');
       }
     } catch (error) {
-      console.error("Error creating farm:", error);
-      toast.error("Error creating farm");
+      console.error('Error creating farm:', error);
+      toast.error('Error creating farm');
     } finally {
       setIsLoading(false);
     }
   };
 
   const resetForm = () => {
-    setFarmName("");
-    setFarmDesc("");
-    setBatchCodePrefix("");
-    setPhone("");
-    setArea("");
-    setDetail("");
-    setSelectedProvince("");
-    setSelectedProvinceName("");
-    setSelectedDistrict("");
-    setSelectedDistrictName("");
-    setSelectedWard("");
-    setSelectedWardName("");
+    setFarmName('');
+    setFarmDesc('');
+    setBatchCodePrefix('');
+    setPhone('');
+    setArea('');
+    setDetail('');
+    setSelectedProvince('');
+    setSelectedProvinceName('');
+    setSelectedDistrict('');
+    setSelectedDistrictName('');
+    setSelectedWard('');
+    setSelectedWardName('');
     setBannerFile(null);
     setBannerPreview(null);
   };
@@ -235,7 +235,7 @@ export function AddFarmDialog({
       <DialogContent
         className="max-w-2xl flex flex-col"
         style={{
-          maxHeight: "90vh",
+          maxHeight: '90vh',
         }}
       >
         <DialogHeader>
@@ -306,7 +306,7 @@ export function AddFarmDialog({
           {/* Area */}
           <div className="space-y-2">
             <Label htmlFor="area" className="text-sm font-medium">
-              Area <span className="text-red-500">*</span>
+              Area (m<sup>2</sup>) <span className="text-red-500">*</span>
             </Label>
             <Input
               id="area"
@@ -327,7 +327,7 @@ export function AddFarmDialog({
               onValueChange={(code) => {
                 setSelectedProvince(code);
                 const province = provinces.find((p) => String(p.code) === code);
-                setSelectedProvinceName(province?.name || "");
+                setSelectedProvinceName(province?.name || '');
               }}
               disabled={isLoadingProvinces || isLoading}
             >
@@ -354,7 +354,7 @@ export function AddFarmDialog({
               onValueChange={(code) => {
                 setSelectedDistrict(code);
                 const district = districts.find((d) => String(d.code) === code);
-                setSelectedDistrictName(district?.name || "");
+                setSelectedDistrictName(district?.name || '');
               }}
               disabled={!selectedProvince || isLoadingDistricts || isLoading}
             >
@@ -381,7 +381,7 @@ export function AddFarmDialog({
               onValueChange={(code) => {
                 setSelectedWard(code);
                 const ward = wards.find((w) => String(w.code) === code);
-                setSelectedWardName(ward?.name || "");
+                setSelectedWardName(ward?.name || '');
               }}
               disabled={!selectedDistrict || isLoadingWards || isLoading}
             >
@@ -482,7 +482,7 @@ export function AddFarmDialog({
             onClick={handleSubmit}
             disabled={isLoading}
           >
-            {isLoading ? "Creating..." : "Create Farm"}
+            {isLoading ? 'Creating...' : 'Create Farm'}
           </Button>
         </DialogFooter>
       </DialogContent>

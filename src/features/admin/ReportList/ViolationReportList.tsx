@@ -1,11 +1,21 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, Calendar, Image as ImageIcon, Shield, RefreshCw, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import {
+  AlertTriangle,
+  Calendar,
+  Image as ImageIcon,
+  Shield,
+  RefreshCw,
+  FileText,
+  AlertCircle,
+  CheckCircle,
+} from 'lucide-react';
 import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import axios from 'axios';
 import { API } from '../../../api';
 import { toast } from 'sonner';
+import { formatUtcDateTime } from '../../../utils/timeUtils';
 
 interface ViolationReport {
   content: string;
@@ -45,7 +55,15 @@ export function ViolationReportList() {
       }
     } catch (err) {
       console.error('Error fetching violation reports:', err);
-      const errorMessage = (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (err as Error)?.message || 'Failed to load violation reports';
+      const errorMessage =
+        (
+          err as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
+        (err as Error)?.message ||
+        'Failed to load violation reports';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -65,14 +83,7 @@ export function ViolationReportList() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return formatUtcDateTime(dateString);
   };
 
   const handleBanFarm = async (farmId: string, reportIndex: number) => {
@@ -81,7 +92,11 @@ export function ViolationReportList() {
       return;
     }
 
-    if (!confirm('Are you sure you want to ban this farm? This action will restrict the farm from the platform.')) {
+    if (
+      !confirm(
+        'Are you sure you want to ban this farm? This action will restrict the farm from the platform.'
+      )
+    ) {
       return;
     }
 
@@ -105,13 +120,23 @@ export function ViolationReportList() {
       if (response.data.success) {
         toast.success('Farm has been banned successfully!');
         // Remove the report from the list
-        setReports(prevReports => prevReports.filter((_, index) => index !== reportIndex));
+        setReports((prevReports) =>
+          prevReports.filter((_, index) => index !== reportIndex)
+        );
       } else {
         throw new Error(response.data.message || 'Failed to ban farm');
       }
     } catch (err) {
       console.error('Error banning farm:', err);
-      const errorMessage = (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (err as Error)?.message || 'Failed to ban farm';
+      const errorMessage =
+        (
+          err as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
+        (err as Error)?.message ||
+        'Failed to ban farm';
       toast.error(errorMessage);
     } finally {
       setIsBanning(null);
@@ -123,7 +148,7 @@ export function ViolationReportList() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <div 
+          <div
             className="flex items-center justify-center rounded-2xl shadow-2xl"
             style={{
               width: '80px',
@@ -131,10 +156,20 @@ export function ViolationReportList() {
               background: 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
             }}
           >
-            <Shield className="text-white" style={{ width: '40px', height: '40px' }} />
+            <Shield
+              className="text-white"
+              style={{ width: '40px', height: '40px' }}
+            />
           </div>
           <div>
-            <h2 className="text-gray-900" style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px' }}>
+            <h2
+              className="text-gray-900"
+              style={{
+                fontSize: '32px',
+                fontWeight: '800',
+                marginBottom: '8px',
+              }}
+            >
               Violation Reports
             </h2>
             <p className="text-gray-600" style={{ fontSize: '16px' }}>
@@ -145,7 +180,7 @@ export function ViolationReportList() {
 
         {/* Loading State */}
         <Card className="p-12 text-center border-2">
-          <div 
+          <div
             className="mx-auto mb-4 rounded-full flex items-center justify-center"
             style={{
               width: '80px',
@@ -154,9 +189,15 @@ export function ViolationReportList() {
               animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
             }}
           >
-            <RefreshCw className="text-white animate-spin" style={{ width: '40px', height: '40px' }} />
+            <RefreshCw
+              className="text-white animate-spin"
+              style={{ width: '40px', height: '40px' }}
+            />
           </div>
-          <p className="text-gray-600" style={{ fontSize: '18px', fontWeight: '600' }}>
+          <p
+            className="text-gray-600"
+            style={{ fontSize: '18px', fontWeight: '600' }}
+          >
             Loading violation reports...
           </p>
         </Card>
@@ -169,7 +210,7 @@ export function ViolationReportList() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <div 
+          <div
             className="flex items-center justify-center rounded-2xl shadow-2xl"
             style={{
               width: '80px',
@@ -177,10 +218,20 @@ export function ViolationReportList() {
               background: 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
             }}
           >
-            <Shield className="text-white" style={{ width: '40px', height: '40px' }} />
+            <Shield
+              className="text-white"
+              style={{ width: '40px', height: '40px' }}
+            />
           </div>
           <div>
-            <h2 className="text-gray-900" style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px' }}>
+            <h2
+              className="text-gray-900"
+              style={{
+                fontSize: '32px',
+                fontWeight: '800',
+                marginBottom: '8px',
+              }}
+            >
               Violation Reports
             </h2>
             <p className="text-gray-600" style={{ fontSize: '16px' }}>
@@ -190,11 +241,11 @@ export function ViolationReportList() {
         </div>
 
         {/* Error State */}
-        <Card 
+        <Card
           className="p-12 text-center border-2"
           style={{ borderColor: '#fecaca' }}
         >
-          <div 
+          <div
             className="mx-auto mb-4 rounded-full flex items-center justify-center"
             style={{
               width: '80px',
@@ -202,12 +253,18 @@ export function ViolationReportList() {
               backgroundColor: '#fee2e2',
             }}
           >
-            <AlertCircle className="text-red-600" style={{ width: '40px', height: '40px' }} />
+            <AlertCircle
+              className="text-red-600"
+              style={{ width: '40px', height: '40px' }}
+            />
           </div>
-          <p className="text-red-600 mb-4" style={{ fontSize: '20px', fontWeight: '700' }}>
+          <p
+            className="text-red-600 mb-4"
+            style={{ fontSize: '20px', fontWeight: '700' }}
+          >
             {error}
           </p>
-          <Button 
+          <Button
             onClick={fetchReports}
             style={{
               background: 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
@@ -217,7 +274,10 @@ export function ViolationReportList() {
               fontWeight: '600',
             }}
           >
-            <RefreshCw className="mr-2" style={{ width: '18px', height: '18px' }} />
+            <RefreshCw
+              className="mr-2"
+              style={{ width: '18px', height: '18px' }}
+            />
             Retry
           </Button>
         </Card>
@@ -230,7 +290,7 @@ export function ViolationReportList() {
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div 
+          <div
             className="flex items-center justify-center rounded-2xl shadow-2xl"
             style={{
               width: '80px',
@@ -238,34 +298,51 @@ export function ViolationReportList() {
               background: 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
             }}
           >
-            <Shield className="text-white" style={{ width: '40px', height: '40px' }} />
+            <Shield
+              className="text-white"
+              style={{ width: '40px', height: '40px' }}
+            />
           </div>
           <div>
-            <h2 className="text-gray-900" style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px' }}>
+            <h2
+              className="text-gray-900"
+              style={{
+                fontSize: '32px',
+                fontWeight: '800',
+                marginBottom: '8px',
+              }}
+            >
               Violation Reports
             </h2>
             <p className="text-gray-600" style={{ fontSize: '16px' }}>
-              {reports.length} {reports.length === 1 ? 'report' : 'reports'} pending review
+              {reports.length} {reports.length === 1 ? 'report' : 'reports'}{' '}
+              pending review
             </p>
           </div>
         </div>
 
-        <Button 
+        <Button
           onClick={fetchReports}
           variant="outline"
           className="border-2 hover:bg-gray-50"
           style={{ padding: '12px 24px', fontSize: '16px', fontWeight: '600' }}
         >
-          <RefreshCw className="mr-2" style={{ width: '18px', height: '18px' }} />
+          <RefreshCw
+            className="mr-2"
+            style={{ width: '18px', height: '18px' }}
+          />
           Refresh
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 mb-32" style={{
-        margin: '32px 0'
-      }}>
-        <Card 
+      <div
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 mb-32"
+        style={{
+          margin: '32px 0',
+        }}
+      >
+        <Card
           className="p-6 border-2 shadow-lg hover:shadow-xl transition-all"
           style={{
             background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
@@ -274,14 +351,20 @@ export function ViolationReportList() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-yellow-800 mb-2" style={{ fontSize: '14px', fontWeight: '600' }}>
+              <p
+                className="text-yellow-800 mb-2"
+                style={{ fontSize: '14px', fontWeight: '600' }}
+              >
                 Total Reports
               </p>
-              <p className="text-yellow-900" style={{ fontSize: '36px', fontWeight: '800' }}>
+              <p
+                className="text-yellow-900"
+                style={{ fontSize: '36px', fontWeight: '800' }}
+              >
                 {reports.length}
               </p>
             </div>
-            <div 
+            <div
               className="rounded-full flex items-center justify-center"
               style={{
                 width: '60px',
@@ -289,12 +372,15 @@ export function ViolationReportList() {
                 backgroundColor: '#fef3c7',
               }}
             >
-              <FileText className="text-yellow-600" style={{ width: '30px', height: '30px' }} />
+              <FileText
+                className="text-yellow-600"
+                style={{ width: '30px', height: '30px' }}
+              />
             </div>
           </div>
         </Card>
 
-        <Card 
+        <Card
           className="p-6 border-2 shadow-lg hover:shadow-xl transition-all"
           style={{
             background: 'linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)',
@@ -303,14 +389,23 @@ export function ViolationReportList() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-red-800 mb-2" style={{ fontSize: '14px', fontWeight: '600' }}>
+              <p
+                className="text-red-800 mb-2"
+                style={{ fontSize: '14px', fontWeight: '600' }}
+              >
                 Fake Products
               </p>
-              <p className="text-red-900" style={{ fontSize: '36px', fontWeight: '800' }}>
-                {reports.filter(r => r.violationType === 'Fake Product').length}
+              <p
+                className="text-red-900"
+                style={{ fontSize: '36px', fontWeight: '800' }}
+              >
+                {
+                  reports.filter((r) => r.violationType === 'Fake Product')
+                    .length
+                }
               </p>
             </div>
-            <div 
+            <div
               className="rounded-full flex items-center justify-center"
               style={{
                 width: '60px',
@@ -318,12 +413,15 @@ export function ViolationReportList() {
                 backgroundColor: '#fee2e2',
               }}
             >
-              <AlertTriangle className="text-red-600" style={{ width: '30px', height: '30px' }} />
+              <AlertTriangle
+                className="text-red-600"
+                style={{ width: '30px', height: '30px' }}
+              />
             </div>
           </div>
         </Card>
 
-        <Card 
+        <Card
           className="p-6 border-2 shadow-lg hover:shadow-xl transition-all"
           style={{
             background: 'linear-gradient(135deg, #fed7aa 0%, #fdba74 100%)',
@@ -332,14 +430,23 @@ export function ViolationReportList() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-orange-800 mb-2" style={{ fontSize: '14px', fontWeight: '600' }}>
+              <p
+                className="text-orange-800 mb-2"
+                style={{ fontSize: '14px', fontWeight: '600' }}
+              >
                 Fake Events
               </p>
-              <p className="text-orange-900" style={{ fontSize: '36px', fontWeight: '800' }}>
-                {reports.filter(r => r.violationType === 'Fake Care Event').length}
+              <p
+                className="text-orange-900"
+                style={{ fontSize: '36px', fontWeight: '800' }}
+              >
+                {
+                  reports.filter((r) => r.violationType === 'Fake Care Event')
+                    .length
+                }
               </p>
             </div>
-            <div 
+            <div
               className="rounded-full flex items-center justify-center"
               style={{
                 width: '60px',
@@ -347,7 +454,10 @@ export function ViolationReportList() {
                 backgroundColor: '#ffedd5',
               }}
             >
-              <AlertCircle className="text-orange-600" style={{ width: '30px', height: '30px' }} />
+              <AlertCircle
+                className="text-orange-600"
+                style={{ width: '30px', height: '30px' }}
+              />
             </div>
           </div>
         </Card>
@@ -355,11 +465,11 @@ export function ViolationReportList() {
 
       {/* Reports List */}
       {reports.length === 0 ? (
-        <Card 
+        <Card
           className="p-12 text-center border-2"
           style={{ borderColor: '#d1d5db', borderStyle: 'dashed' }}
         >
-          <div 
+          <div
             className="mx-auto mb-4 rounded-full flex items-center justify-center"
             style={{
               width: '80px',
@@ -367,9 +477,15 @@ export function ViolationReportList() {
               backgroundColor: '#f3f4f6',
             }}
           >
-            <CheckCircle className="text-green-600" style={{ width: '40px', height: '40px' }} />
+            <CheckCircle
+              className="text-green-600"
+              style={{ width: '40px', height: '40px' }}
+            />
           </div>
-          <p className="text-gray-900 mb-2" style={{ fontSize: '20px', fontWeight: '700' }}>
+          <p
+            className="text-gray-900 mb-2"
+            style={{ fontSize: '20px', fontWeight: '700' }}
+          >
             No Violation Reports
           </p>
           <p className="text-gray-600" style={{ fontSize: '16px' }}>
@@ -379,7 +495,7 @@ export function ViolationReportList() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {reports.map((report, index) => (
-            <Card 
+            <Card
               key={index}
               className="overflow-hidden border-2 hover:shadow-2xl transition-all"
               style={{
@@ -387,35 +503,46 @@ export function ViolationReportList() {
               }}
             >
               {/* Report Header */}
-              <div 
+              <div
                 className="p-6"
                 style={{
-                  background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+                  background:
+                    'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
                   borderBottom: '2px solid #f87171',
                 }}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div 
+                    <div
                       className="rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{
                         width: '48px',
                         height: '48px',
-                        background: 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
+                        background:
+                          'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
                       }}
                     >
-                      <AlertTriangle className="text-white" style={{ width: '24px', height: '24px' }} />
+                      <AlertTriangle
+                        className="text-white"
+                        style={{ width: '24px', height: '24px' }}
+                      />
                     </div>
                     <div>
-                      <Badge 
+                      <Badge
                         className={getViolationTypeColor(report.violationType)}
-                        style={{ fontSize: '12px', fontWeight: '700', padding: '4px 12px' }}
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          padding: '4px 12px',
+                        }}
                       >
                         {report.violationType || 'Violation Report'}
                       </Badge>
                       <div className="flex items-center gap-2 mt-2 text-gray-600">
                         <Calendar style={{ width: '14px', height: '14px' }} />
-                        <span style={{ fontSize: '13px' }}>{formatDate(report.createdAt)}</span>
+                        <span style={{ fontSize: '13px' }}>
+                          {formatDate(report.createdAt)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -425,10 +552,21 @@ export function ViolationReportList() {
               {/* Report Content */}
               <div className="p-6">
                 <div className="mb-4">
-                  <h4 className="text-gray-900 mb-2" style={{ fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <h4
+                    className="text-gray-900 mb-2"
+                    style={{
+                      fontSize: '14px',
+                      fontWeight: '700',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
                     Description
                   </h4>
-                  <p className="text-gray-700" style={{ fontSize: '15px', lineHeight: '1.6' }}>
+                  <p
+                    className="text-gray-700"
+                    style={{ fontSize: '15px', lineHeight: '1.6' }}
+                  >
                     {report.content}
                   </p>
                 </div>
@@ -436,10 +574,18 @@ export function ViolationReportList() {
                 {/* Evidence Image */}
                 {report.evidenceUrl && (
                   <div>
-                    <h4 className="text-gray-900 mb-3" style={{ fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <h4
+                      className="text-gray-900 mb-3"
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                      }}
+                    >
                       Evidence
                     </h4>
-                    <div 
+                    <div
                       className="relative rounded-xl overflow-hidden border-2 cursor-pointer hover:opacity-90 transition-all"
                       style={{
                         borderColor: '#e5e7eb',
@@ -452,13 +598,16 @@ export function ViolationReportList() {
                         alt="Evidence"
                         className="w-full h-full object-cover"
                       />
-                      <div 
+                      <div
                         className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
                         style={{
                           background: 'rgba(0, 0, 0, 0.7)',
                         }}
                       >
-                        <ImageIcon className="text-white" style={{ width: '48px', height: '48px' }} />
+                        <ImageIcon
+                          className="text-white"
+                          style={{ width: '48px', height: '48px' }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -466,14 +615,17 @@ export function ViolationReportList() {
               </div>
 
               {/* Action Footer */}
-              <div 
+              <div
                 className="p-4 flex items-center justify-between"
                 style={{
                   backgroundColor: '#f9fafb',
                   borderTop: '2px solid #e5e7eb',
                 }}
               >
-                <span className="text-gray-600" style={{ fontSize: '13px', fontWeight: '600' }}>
+                <span
+                  className="text-gray-600"
+                  style={{ fontSize: '13px', fontWeight: '600' }}
+                >
                   Report #{index + 1}
                 </span>
                 <div className="flex gap-2">
@@ -482,7 +634,10 @@ export function ViolationReportList() {
                     onClick={() => handleBanFarm(report.farmId || '', index)}
                     disabled={isBanning === report.farmId || !report.farmId}
                     style={{
-                      background: isBanning === report.farmId ? '#9ca3af' : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                      background:
+                        isBanning === report.farmId
+                          ? '#9ca3af'
+                          : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                       color: 'white',
                       fontSize: '14px',
                       fontWeight: '600',
@@ -492,7 +647,10 @@ export function ViolationReportList() {
                   >
                     {isBanning === report.farmId ? (
                       <>
-                        <RefreshCw className="mr-2 animate-spin" style={{ width: '16px', height: '16px' }} />
+                        <RefreshCw
+                          className="mr-2 animate-spin"
+                          style={{ width: '16px', height: '16px' }}
+                        />
                         Banning...
                       </>
                     ) : (
@@ -508,14 +666,14 @@ export function ViolationReportList() {
 
       {/* Image Modal */}
       {selectedImage && (
-        <div 
+        <div
           className="fixed inset-0 flex items-center justify-center p-4 z-50"
           style={{
             backgroundColor: 'rgba(0, 0, 0, 0.9)',
           }}
           onClick={() => setSelectedImage(null)}
         >
-          <div 
+          <div
             className="relative max-w-6xl max-h-[90vh] w-full"
             onClick={(e) => e.stopPropagation()}
           >
@@ -528,7 +686,12 @@ export function ViolationReportList() {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
               }}
             >
-              <span className="text-white" style={{ fontSize: '32px', lineHeight: '1' }}>×</span>
+              <span
+                className="text-white"
+                style={{ fontSize: '32px', lineHeight: '1' }}
+              >
+                ×
+              </span>
             </button>
             <img
               src={selectedImage}

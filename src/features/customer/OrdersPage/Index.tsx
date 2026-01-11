@@ -1,45 +1,45 @@
-import { useEffect, useState } from "react";
-import { Card } from "../../../components/ui/card";
-import { Pagination } from "../../../components/Pagination";
-import { toast } from "sonner";
-import { getOrderList } from "./api";
-import { Footer } from "../components";
-import type { Order } from "./types";
-import { Order as OrderComponent } from "./components/Order";
+import { useEffect, useState } from 'react';
+import { Card } from '../../../components/ui/card';
+import { Pagination } from '../../../components/Pagination';
+import { toast } from 'sonner';
+import { getOrderList } from './api';
+import { Footer } from '../components';
+import type { Order } from './types';
+import { Order as OrderComponent } from './components/Order';
 
 interface OrdersPageProps {
   onNavigateToFeedback: (orderId: string) => void;
 }
 
-const getStatusColor = (status: Order["orderStatus"]) => {
+const getStatusColor = (status: Order['orderStatus']) => {
   switch (status) {
-    case "Delivered":
-      return "bg-green-100 text-green-700";
-    case "In Transit":
-      return "bg-blue-100 text-blue-700";
-    case "Processing":
-      return "bg-yellow-100 text-yellow-700";
-    case "Pending":
-      return "bg-gray-100 text-gray-700";
-    case "Cancelled":
-      return "bg-red-100 text-red-700";
+    case 'Delivered':
+      return 'bg-green-100 text-green-700';
+    case 'Shipping':
+      return 'bg-blue-100 text-blue-700';
+    case 'Processing':
+      return 'bg-yellow-100 text-yellow-700';
+    case 'Pending':
+      return 'bg-gray-100 text-gray-700';
+    case 'Cancelled':
+      return 'bg-red-100 text-red-700';
     default:
-      return "bg-gray-100 text-gray-700";
+      return 'bg-gray-100 text-gray-700';
   }
 };
 
-const getPaymentStatusColor = (status: Order["paymentStatus"]) => {
+const getPaymentStatusColor = (status: Order['paymentStatus']) => {
   switch (status) {
-    case "Completed":
-      return "bg-green-100 text-green-700";
-    case "Pending":
-      return "bg-yellow-100 text-yellow-700";
-    case "Failed":
-      return "bg-red-100 text-red-700";
-    case "Cancelled":
-      return "bg-red-100 text-red-700";
+    case 'Completed':
+      return 'bg-green-100 text-green-700';
+    case 'Pending':
+      return 'bg-yellow-100 text-yellow-700';
+    case 'Failed':
+      return 'bg-red-100 text-red-700';
+    case 'Cancelled':
+      return 'bg-red-100 text-red-700';
     default:
-      return "bg-gray-100 text-gray-700";
+      return 'bg-gray-100 text-gray-700';
   }
 };
 
@@ -69,15 +69,15 @@ export function OrdersPage({ onNavigateToFeedback }: OrdersPageProps) {
       try {
         setIsLoading(true);
         const response = await getOrderList();
-        console.log("Order response:", response);
+        console.log('Order response:', response);
         if (response.success) {
           setOrderList(response.data || []);
         } else {
           toast.error(`Get order list failed: ${response.message}`);
         }
       } catch (error) {
-        console.error("Error fetching orders:", error);
-        toast.error("Failed to load orders. Please try again.");
+        console.error('Error fetching orders:', error);
+        toast.error('Failed to load orders. Please try again.');
       } finally {
         setIsLoading(false);
       }

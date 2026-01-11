@@ -32,6 +32,7 @@ import {
 } from './api';
 import { getMyFavoriteFarms } from '../FavoriteFarms/api';
 import { useNavigate } from 'react-router-dom';
+import { removeCredentials } from '../../../utils/credentialsSettings';
 
 const defaultUserInfo: UserInfo = {
   accountId: '',
@@ -58,11 +59,8 @@ export function UserProfile() {
   }
 
   function onLogout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('role');
+    removeCredentials();
     navigate('/');
-    window.location.reload();
   }
 
   const handleSave = () => {

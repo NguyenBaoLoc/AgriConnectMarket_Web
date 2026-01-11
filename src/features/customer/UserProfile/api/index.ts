@@ -1,5 +1,5 @@
-import axios from "axios";
-import { API } from "../../../../api";
+import axios from 'axios';
+import { API } from '../../../../api';
 import type {
   DeleteUserResponse,
   Order,
@@ -9,11 +9,11 @@ import type {
   UserAddressResponse,
   UserInfo,
   UserInfoResponse,
-} from "../types";
+} from '../types';
 
 export async function getUserInfo(): Promise<UserInfoResponse> {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     const api = axios.create({
       headers: {
         Authorization: `Bearer ${token}`,
@@ -34,7 +34,7 @@ export async function getUserInfo(): Promise<UserInfoResponse> {
 
 export async function getUserAddress(): Promise<UserAddressResponse> {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     const api = axios.create({
       headers: {
         Authorization: `Bearer ${token}`,
@@ -59,28 +59,28 @@ export async function getOrderList(
   try {
     return {
       success: true,
-      message: "",
+      message: '',
       data: [
         {
-          orderCode: "12345",
-          orderDate: "Oct 14, 2025",
-          items: ["Fresh Strawberries", "Organic Tomatoes", "Spinach"],
+          orderCode: '12345',
+          orderDate: 'Oct 14, 2025',
+          items: ['Fresh Strawberries', 'Organic Tomatoes', 'Spinach'],
           total: 25.47,
-          status: "Delivered",
+          status: 'Delivered',
         },
         {
-          orderCode: "12344",
-          orderDate: "Oct 5, 2025",
-          items: ["Bananas", "Carrots", "Green Lettuce", "Coffee"],
+          orderCode: '12344',
+          orderDate: 'Oct 5, 2025',
+          items: ['Bananas', 'Carrots', 'Green Lettuce', 'Coffee'],
           total: 18.27,
-          status: "In Transit",
+          status: 'Shipping',
         },
         {
-          orderCode: "12343",
-          orderDate: "Sep 28, 2025",
-          items: ["Mixed Berries", "Kale", "Bell Peppers"],
+          orderCode: '12343',
+          orderDate: 'Sep 28, 2025',
+          items: ['Mixed Berries', 'Kale', 'Bell Peppers'],
           total: 32.97,
-          status: "Delivered",
+          status: 'Delivered',
         },
       ],
     };
@@ -103,7 +103,7 @@ export async function updateUserInfo(
   try {
     const userId = request.id;
     const { fullname, email, phone } = request;
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     const api = axios.create({
       headers: {
         Authorization: `Bearer ${token}`,
@@ -132,7 +132,7 @@ export async function deleteUserInfo(
   try {
     return {
       success: true,
-      message: "",
+      message: '',
       data: undefined,
     };
     // const url = API.customer.delete;

@@ -7,6 +7,7 @@ import {
   Plus,
   Minus,
   Trash2,
+  Check,
 } from 'lucide-react';
 import { Footer } from '../components';
 import { formatVND } from '../../../components/ui/utils';
@@ -44,6 +45,7 @@ export function CartPage({
   const [error, setError] = useState<string | null>(null);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [deletingAll, setDeletingAll] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   // ❗ TEMP INPUTS for quantity — THIS is what caused your bug
   const [quantityInputs, setQuantityInputs] = useState<Record<string, number>>(
@@ -63,6 +65,38 @@ export function CartPage({
     });
   };
 
+  // Toggle selection of a single item
+  const handleToggleItemSelection = (itemId: string) => {
+    setSelectedItems((prev) => {
+      const updated = new Set(prev);
+      if (updated.has(itemId)) {
+        updated.delete(itemId);
+      } else {
+        updated.add(itemId);
+      }
+      return updated;
+    });
+  };
+
+  // Select all items
+  const handleSelectAll = () => {
+    if (!cartData) return;
+    const allItemIds = new Set<string>();
+    cartData.cartItems.forEach((farm) => {
+      if (farm && farm.items) {
+        farm.items.forEach((item) => {
+          allItemIds.add(item.itemId);
+        });
+      }
+    });
+    setSelectedItems(allItemIds);
+  };
+
+  // Deselect all items
+  const handleDeselectAll = () => {
+    setSelectedItems(new Set());
+  };
+
   const cartItemCount =
     cartData?.cartItems
       ?.filter((farm) => farm !== null)
@@ -70,6 +104,18 @@ export function CartPage({
         (sum: number, farm: any) => sum + (farm?.items?.length || 0),
         0
       ) || 0;
+
+  const selectedItemCount = selectedItems.size;
+
+  const selectedItemsTotal =
+    cartData?.cartItems
+      ?.filter((farm) => farm !== null && farm.items)
+      .reduce((sum: number, farm) => {
+        const farmTotal = farm.items
+          .filter((item) => selectedItems.has(item.itemId))
+          .reduce((itemSum, item) => itemSum + item.itemPrice, 0);
+        return sum + farmTotal;
+      }, 0) || 0;
 
   const hasCartItems =
     cartData?.cartItems &&
@@ -80,7 +126,12 @@ export function CartPage({
   };
 
   const handleProceedToCheckout = () => {
-    navigate('/checkout');
+    // Pass selected items info to checkout page
+    navigate('/checkout', {
+      state: {
+        selectedItemIds: Array.from(selectedItems),
+      },
+    });
   };
 
   const handleUpdateQuantity = async (
@@ -108,10 +159,12 @@ export function CartPage({
       }
 
       // Get current quantity from cart data
-      const current = currentQuantity ?? 
+      const current =
+        currentQuantity ??
         cartData?.cartItems
-          .flatMap(farm => farm?.items || [])
-          .find(item => item.itemId === itemId)?.quantity ?? 0;
+          .flatMap((farm) => farm?.items || [])
+          .find((item) => item.itemId === itemId)?.quantity ??
+        0;
 
       // Calculate delta (change amount)
       const delta = newQuantity - current;
@@ -293,9 +346,32 @@ export function CartPage({
           {/* Cart Items */}
           <div className="lg:col-span-2">
             <Card className="p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <ShoppingCart className="h-6 w-6 text-green-600" />
-                <h2>Shopping Cart ({cartItemCount} items)</h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart className="h-6 w-6 text-green-600" />
+                  <h2>Shopping Cart ({cartItemCount} items)</h2>
+                </div>
+                {hasCartItems && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAll}
+                      className="text-xs"
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Select All
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDeselectAll}
+                      className="text-xs"
+                    >
+                      Deselect All
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {!hasCartItems ? (
@@ -320,8 +396,22 @@ export function CartPage({
                           {farm.items?.map((item) => (
                             <div
                               key={item.itemId}
-                              className="flex gap-4 pb-3 border-b border-gray-100 items-start"
+                              className={`flex gap-4 pb-3 border-b border-gray-100 items-start transition-colors ${
+                                selectedItems.has(item.itemId)
+                                  ? 'bg-green-50 p-2 rounded'
+                                  : ''
+                              }`}
                             >
+                              {/* Checkbox */}
+                              <input
+                                type="checkbox"
+                                checked={selectedItems.has(item.itemId)}
+                                onChange={() =>
+                                  handleToggleItemSelection(item.itemId)
+                                }
+                                className="mt-2 w-5 h-5 text-green-600 rounded cursor-pointer"
+                              />
+
                               <button
                                 onClick={() =>
                                   handleNavigateToProduct(item.itemId)
@@ -410,21 +500,21 @@ export function CartPage({
                                       }));
                                     }}
                                     onKeyDown={(e) => {
-                                       if (e.key === 'Enter') {
-                                         const newQty =
-                                           quantityInputs[item.itemId] ??
-                                           item.quantity;
-                                         if (newQty >= 1) {
-                                           handleUpdateQuantity(
-                                             item.itemId,
-                                             item.batchId,
-                                             newQty,
-                                             item.quantity
-                                           );
-                                           clearQuantityInputs(item.itemId);
-                                         }
-                                       }
-                                     }}
+                                      if (e.key === 'Enter') {
+                                        const newQty =
+                                          quantityInputs[item.itemId] ??
+                                          item.quantity;
+                                        if (newQty >= 1) {
+                                          handleUpdateQuantity(
+                                            item.itemId,
+                                            item.batchId,
+                                            newQty,
+                                            item.quantity
+                                          );
+                                          clearQuantityInputs(item.itemId);
+                                        }
+                                      }
+                                    }}
                                     onBlur={() =>
                                       clearQuantityInputs(item.itemId)
                                     }
@@ -487,8 +577,18 @@ export function CartPage({
                 <>
                   <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
                     <div className="flex justify-between">
+                      <span className="text-gray-600">Total Items</span>
+                      <span className="font-medium">{cartItemCount}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Selected Items</span>
+                      <span className="font-medium text-green-600">
+                        {selectedItemCount}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Customer</span>
-                      <span className="font-medium">{cartData.fullname}</span>
+                      <span>{cartData.fullname}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Email</span>
@@ -500,10 +600,18 @@ export function CartPage({
                     </div>
                   </div>
 
-                  <div className="flex justify-between mb-6 pt-4">
-                    <span className="text-lg font-semibold">Total</span>
-                    <span className="text-lg font-semibold text-green-600">
+                  <div className="flex justify-between mb-2 pt-4">
+                    <span className="text-sm text-gray-600">Cart Total</span>
+                    <span className="text-sm text-gray-600">
                       {formatVND(cartData?.totalPrice || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between mb-6">
+                    <span className="text-lg font-semibold">
+                      Selected Total
+                    </span>
+                    <span className="text-lg font-semibold text-green-600">
+                      {formatVND(selectedItemsTotal)}
                     </span>
                   </div>
                 </>
@@ -511,10 +619,12 @@ export function CartPage({
 
               <Button
                 className="w-full bg-green-600 hover:bg-green-700"
-                disabled={cartItemCount === 0}
+                disabled={selectedItemCount === 0}
                 onClick={handleProceedToCheckout}
               >
-                Proceed to Checkout
+                {selectedItemCount === 0
+                  ? 'Select Items to Checkout'
+                  : `Proceed to Checkout (${selectedItemCount} items)`}
               </Button>
 
               <div className={cartItemCount === 0 ? 'hidden' : 'mt-3'}>

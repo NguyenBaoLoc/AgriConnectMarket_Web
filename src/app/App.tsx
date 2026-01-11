@@ -46,6 +46,12 @@ import { CategoryList } from '../features/admin/CategoryList/CategoryList';
 import { ProductList as AdminProductList } from '../features/admin/ProductList/ProductList';
 import { ViolationReportList } from '../features/admin/ReportList/ViolationReportList';
 import { CareEventTypeList } from '../features/admin/CareEventTypeList/CareEventTypeList';
+import { TransactionList } from '../features/admin/TransactionList/TransactionList';
+import { ModeratorLayout } from '../features/moderator/components/ModeratorLayout/Index';
+import { FarmDetail as ModeratorFarmDetail } from '../features/moderator/FarmDetail/FarmDetail';
+import { ModeratorFarmDetailView } from '../features/moderator/FarmDetail/FarmDetailView';
+import { ReportList as ModeratorReportList } from '../features/moderator/ReportList/ReportList';
+import { TransactionList as ModeratorTransactionList } from '../features/moderator/TransactionList/TransactionList';
 import { EmailVerifiedPage } from '../features/customer/EmailVerifiedPage/Index';
 import { PaymentResultPage } from '../features/customer/PaymentResultPage/Index';
 import { ProductBatchList } from '../features/farmer/ProductBatchList/ProductBatchList';
@@ -78,6 +84,9 @@ type Page =
   | 'admin-farm-detail'
   | 'admin-user-detail'
   | 'admin-profile'
+  | 'moderator-dashboard'
+  | 'moderator-farm-detail'
+  | 'moderator-profile'
   | 'farmer-dashboard'
   | 'farmer-order-detail'
   | 'farmer-season-detail'
@@ -99,6 +108,8 @@ export default function App() {
   const handleLogin = () => {
     if (userRole === ('Admin' as UserRole)) {
       setCurrentPage('admin-dashboard');
+    } else if (userRole === ('Moderator' as UserRole)) {
+      setCurrentPage('moderator-dashboard');
     } else if (userRole === ('Farmer' as UserRole)) {
       setCurrentPage('farmer-dashboard');
     } else if (
@@ -202,6 +213,7 @@ export default function App() {
     if (role === 'customer') return <Navigate to="/" replace />;
     if (role === 'farmer') return <Navigate to="/farmer" replace />;
     if (role === 'admin') return <Navigate to="/admin" replace />;
+    if (role === 'moderator') return <Navigate to="/moderator" replace />;
     return <Outlet />;
   }
   function CustomerRedirect() {
@@ -215,6 +227,11 @@ export default function App() {
     return <Outlet />;
   }
   function AdminRedirect() {
+    const role = localStorage.getItem('role');
+    if (!role) return <Navigate to="/auth" replace />;
+    return <Outlet />;
+  }
+  function ModeratorRedirect() {
     const role = localStorage.getItem('role');
     if (!role) return <Navigate to="/auth" replace />;
     return <Outlet />;
@@ -305,10 +322,7 @@ export default function App() {
               path="/checkout"
               element={<CheckoutPage onBack={() => navigate('/cart')} />}
             />
-            <Route
-              path="/pre-order/:batchId"
-              element={<PreOrderPage />}
-            />
+            <Route path="/pre-order/:batchId" element={<PreOrderPage />} />
             <Route
               path="/pre-order-confirmation/:orderCode"
               element={<PreOrderConfirmationPage />}
@@ -375,7 +389,28 @@ export default function App() {
           <Route path="/admin/categories" element={<CategoryList />} />
           <Route path="/admin/products" element={<AdminProductList />} />
           <Route path="/admin/event-types" element={<CareEventTypeList />} />
+          <Route path="/admin/transactions" element={<TransactionList />} />
           <Route path="/admin/reports" element={<ViolationReportList />} />
+        </Route>
+        {/* Moderator Routes */}
+        <Route element={<ModeratorLayout />}>
+          <Route element={<ModeratorRedirect />}>
+            <Route path="/moderator" element={<ModeratorFarmDetail />} />
+            <Route path="/moderator/farms" element={<ModeratorFarmDetail />} />
+            <Route
+              path="/moderator/farms/:farmId"
+              element={<ModeratorFarmDetailView />}
+            />
+            <Route
+              path="/moderator/reports"
+              element={<ViolationReportList />}
+            />
+            <Route
+              path="/moderator/transactions"
+              element={<TransactionList />}
+            />
+            <Route path="/moderator/profile" element={<AdminProfile />} />
+          </Route>
         </Route>
         {/* Error Route */}
         <Route

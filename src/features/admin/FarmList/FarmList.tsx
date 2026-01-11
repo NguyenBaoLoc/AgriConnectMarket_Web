@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { Eye, Search } from "lucide-react";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Badge } from "../../../components/ui/badge";
+import { useEffect, useState } from 'react';
+import { Eye, Search } from 'lucide-react';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Badge } from '../../../components/ui/badge';
+import { formatUtcDate } from '../../../utils/timeUtils';
 import {
   Table,
   TableBody,
@@ -10,22 +11,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
+} from '../../../components/ui/table';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Pagination } from "../../../components/Pagination";
-import type { Farm } from "./types/index.ts";
-import { getFarmList } from "./api/index.ts";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+} from '../../../components/ui/card';
+import { Pagination } from '../../../components/Pagination';
+import type { Farm } from './types/index.ts';
+import { getFarmList } from './api/index.ts';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export function FarmList() {
   const [farms, setFarms] = useState<Farm[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ export function FarmList() {
           toast.error(`Get Farm List failed: ${response.message}`);
         }
       } catch (error) {
-        console.error("Unexpected login error:", error);
+        console.error('Unexpected login error:', error);
       }
     };
     getFarms();
@@ -75,13 +76,15 @@ export function FarmList() {
   };
 
   const getStatusBadges = (farm: Farm) => {
-    const badges: { label: string; variant: "default" | "secondary" | "destructive" | "outline" }[] = [];
-    if (farm.isBanned) badges.push({ label: "Banned", variant: "destructive" });
-    if (!farm.isValidForSelling)
-      badges.push({ label: "Not Verified", variant: "secondary" });
+    const badges: {
+      label: string;
+      variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    }[] = [];
+
     if (farm.isConfirmAsMall)
-      badges.push({ label: "Mall", variant: "default" });
-    if (farm.isDelete) badges.push({ label: "Deleted", variant: "outline" });
+      badges.push({ label: 'Certificate Verified', variant: 'default' });
+    else
+      badges.push({ label: 'Certificate Not Verified', variant: 'secondary' });
     return badges;
   };
 
@@ -117,9 +120,9 @@ export function FarmList() {
                 <TableHead>Description</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Area</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="text-center!">Status</TableHead>
+                <TableHead className="text-center!">Created</TableHead>
+                <TableHead className="text-center!">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -130,42 +133,57 @@ export function FarmList() {
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedFarms.map((farm) => {
+                paginatedFarms.map((farm, index) => {
                   const statusBadges = getStatusBadges(farm);
                   return (
-                    <TableRow key={farm.id}>
+                    <TableRow
+                      key={farm.id}
+                      className={`${
+                        index % 2 === 0 ? 'bg-green-100!' : 'bg-gray-50!'
+                      } hover:bg-green-300!`}
+                    >
                       <TableCell className="font-medium">
                         {farm.farmName}
                       </TableCell>
-                      <TableCell className="max-w-xs truncate text-sm text-muted-foreground" style={{lineClamp: 1, maxWidth: '100px', }}>
-                        {farm.farmDesc || "—"}
+                      <TableCell
+                        className="max-w-xs truncate text-sm text-muted-foreground"
+                        style={{ lineClamp: 1, maxWidth: '100px' }}
+                      >
+                        {farm.farmDesc || '—'}
                       </TableCell>
                       <TableCell>{farm.phone}</TableCell>
-                      <TableCell>{farm.area} ha</TableCell>
                       <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {statusBadges.length === 0 ? (
-                            <Badge variant="outline">Active</Badge>
-                          ) : (
-                            statusBadges.map((badge, idx) => (
-                              <Badge key={idx} variant={badge.variant}>
-                                {badge.label}
-                              </Badge>
-                            ))
-                          )}
+                        {farm.area} m<sup>2</sup>
+                      </TableCell>
+                      <TableCell className="text-center!">
+                        <div className="flex flex-wrap justify-center gap-1 text-center!">
+                          {statusBadges.map((badge, idx) => (
+                            <Badge
+                              key={idx}
+                              variant={badge.variant}
+                              className={`text-center! ${
+                                badge.variant === 'secondary'
+                                  ? 'bg-red-500'
+                                  : badge.variant === 'default'
+                                  ? 'bg-green-500'
+                                  : ''
+                              }`}
+                            >
+                              {badge.label}
+                            </Badge>
+                          ))}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(farm.createdAt).toLocaleDateString()}
+                      <TableCell className="text-center! text-sm text-muted-foreground">
+                        {formatUtcDate(farm.createdAt)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-center!">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => onViewDetails(farm.id)}
                         >
                           <Eye className="w-4 h-4 mr-2" />
-                          View
                         </Button>
                       </TableCell>
                     </TableRow>

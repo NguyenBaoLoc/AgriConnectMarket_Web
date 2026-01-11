@@ -1,5 +1,4 @@
 import {
-  FileText,
   LayoutDashboard,
   Leaf,
   LogOut,
@@ -8,62 +7,71 @@ import {
   Warehouse,
   Tag,
   Package,
-  AlertTriangle,
   Calendar,
-} from "lucide-react";
-import { Outlet, useNavigate } from "react-router-dom";
-import { Button } from "../../../../components/ui/button";
-import { use, useState } from "react";
+  DollarSign,
+} from 'lucide-react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Button } from '../../../../components/ui/button';
+import { removeCredentials } from '../../../../utils/credentialsSettings';
 
-type Tab = "overview" | "farms" | "users" | "categories" | "products" | "reports" | "event-types";
+type Tab =
+  | 'overview'
+  | 'farms'
+  | 'users'
+  | 'categories'
+  | 'products'
+  | 'event-types'
+  | 'transactions';
 
 export const AdminLayout = () => {
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ derive active tab from URL
+  const activeTab: Tab =
+    location.pathname === '/admin'
+      ? 'overview'
+      : location.pathname.includes('/admin/farms')
+      ? 'farms'
+      : location.pathname.includes('/admin/users')
+      ? 'users'
+      : location.pathname.includes('/admin/categories')
+      ? 'categories'
+      : location.pathname.includes('/admin/products')
+      ? 'products'
+      : location.pathname.includes('/admin/event-types')
+      ? 'event-types'
+      : location.pathname.includes('/admin/transactions')
+      ? 'transactions'
+      : 'overview';
 
   const onNavigateToProfile = () => {
-    navigate("/admin/profile");
+    navigate('/admin/profile');
   };
 
   const onNavigateToPage = (id: Tab) => {
-    if (id === "overview") {
-      navigate("/admin");
-    } else if (id === "farms") {
-      navigate("/admin/farms");
-    } else if (id === "users") {
-      navigate("/admin/users");
-    } else if (id === "categories") {
-      navigate("/admin/categories");
-    } else if (id === "products") {
-      navigate("/admin/products");
-    } else if (id === "reports") {
-      navigate("/admin/reports");
-    } else if (id === "event-types") {
-      navigate("/admin/event-types");
-    }
+    if (id === 'overview') navigate('/admin');
+    else navigate(`/admin/${id}`);
   };
 
   const onLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("role");
-    navigate("/");
-    window.location.reload();
+    removeCredentials();
+    navigate('/');
   };
 
   const navItems = [
-    { id: "overview" as Tab, label: "Overview", icon: LayoutDashboard },
-    { id: "farms" as Tab, label: "Farms", icon: Warehouse },
-    { id: "users" as Tab, label: "Users", icon: Users },
-    { id: "event-types" as Tab, label: "Event Types", icon: Calendar },
-    { id: "categories" as Tab, label: "Categories", icon: Tag },
-    { id: "products" as Tab, label: "Products", icon: Package },
-    { id: "reports" as Tab, label: "Reports", icon: AlertTriangle },
+    { id: 'overview' as Tab, label: 'Overview', icon: LayoutDashboard },
+    { id: 'farms' as Tab, label: 'Farms', icon: Warehouse },
+    { id: 'users' as Tab, label: 'Users', icon: Users },
+    { id: 'event-types' as Tab, label: 'Event Types', icon: Calendar },
+    { id: 'categories' as Tab, label: 'Categories', icon: Tag },
+    { id: 'products' as Tab, label: 'Products', icon: Package },
+    { id: 'transactions' as Tab, label: 'Transactions', icon: DollarSign },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top Header */}
+      {/* Header */}
       <header className="bg-white border-b sticky top-0 z-40">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
@@ -96,14 +104,16 @@ export const AdminLayout = () => {
           <nav className="p-4 space-y-2">
             {navItems.map((item) => {
               const Icon = item.icon;
+              const isActive = activeTab === item.id;
+
               return (
                 <button
                   key={item.id}
                   onClick={() => onNavigateToPage(item.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === item.id
-                      ? "bg-green-50 text-green-700"
-                      : "text-gray-700 hover:bg-gray-50"
+                    isActive
+                      ? 'bg-green-50 text-green-700'
+                      : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -113,6 +123,7 @@ export const AdminLayout = () => {
             })}
           </nav>
         </aside>
+
         <main className="flex-1 p-8">
           <Outlet />
         </main>

@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, Package, Truck } from "lucide-react";
-import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "../../../components/ui/button";
-import { Card } from "../../../components/ui/card";
-import { Badge } from "../../../components/ui/badge";
-import { formatVND } from "../../../components/ui/utils";
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Package, Truck } from 'lucide-react';
+import axios from 'axios';
+import { useParams, useNavigate } from 'react-router-dom';
+import { formatUtcDate } from '../../../utils/timeUtils';
+import { Button } from '../../../components/ui/button';
+import { Card } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
+import { formatVND } from '../../../components/ui/utils';
 import {
   Dialog,
   DialogContent,
@@ -13,19 +14,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
+} from '../../../components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
-import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
-import { toast } from "sonner";
-import { API } from "../../../api";
+} from '../../../components/ui/select';
+import { Input } from '../../../components/ui/input';
+import { Label } from '../../../components/ui/label';
+import { Textarea } from '../../../components/ui/textarea';
+import { toast } from 'sonner';
+import { API } from '../../../api';
 
 interface OrderDetailProps {
   orderId?: string;
@@ -39,15 +40,15 @@ export function OrderDetail({
   const params = useParams<{ orderId: string }>();
   const navigate = useNavigate();
 
-  const actualOrderId = propOrderId || params.orderId || "";
-  const actualOnBack = propOnBack || (() => navigate("/farmer/orders"));
+  const actualOrderId = propOrderId || params.orderId || '';
+  const actualOnBack = propOnBack || (() => navigate('/farmer/orders'));
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [showShipmentDialog, setShowShipmentDialog] = useState(false);
-  const [newStatus, setNewStatus] = useState("");
-  const [trackingNumber, setTrackingNumber] = useState("");
-  const [carrier, setCarrier] = useState("");
-  const [estimatedDelivery, setEstimatedDelivery] = useState("");
-  const [notes, setNotes] = useState("");
+  const [newStatus, setNewStatus] = useState('');
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [carrier, setCarrier] = useState('');
+  const [estimatedDelivery, setEstimatedDelivery] = useState('');
+  const [notes, setNotes] = useState('');
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,9 +59,9 @@ export function OrderDetail({
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem('token');
         if (!token) {
-          throw new Error("No authentication token found");
+          throw new Error('No authentication token found');
         }
 
         const detailApi = axios.create({
@@ -69,7 +70,7 @@ export function OrderDetail({
           },
         });
 
-        console.log("Fetching order with ID:", actualOrderId);
+        console.log('Fetching order with ID:', actualOrderId);
         const response = await detailApi.get(
           `${API.order.base}/${actualOrderId}`
         );
@@ -79,14 +80,14 @@ export function OrderDetail({
           setNewStatus(response.data.data.orderStatus);
         } else {
           throw new Error(
-            response.data.message || "Failed to fetch order details"
+            response.data.message || 'Failed to fetch order details'
           );
         }
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "An error occurred";
+          err instanceof Error ? err.message : 'An error occurred';
         setError(errorMessage);
-        console.error("Failed to fetch order details:", errorMessage);
+        console.error('Failed to fetch order details:', errorMessage);
       } finally {
         setLoading(false);
       }
@@ -97,14 +98,14 @@ export function OrderDetail({
 
   const handleUpdateStatus = async () => {
     if (!newStatus) {
-      toast.error("Please select a status");
+      toast.error('Please select a status');
       return;
     }
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error("No authentication token found");
+        throw new Error('No authentication token found');
       }
 
       const statusApi = axios.create({
@@ -123,48 +124,48 @@ export function OrderDetail({
           ...prev,
           orderStatus: newStatus,
         }));
-        toast.success("Order status updated successfully");
+        toast.success('Order status updated successfully');
         setShowStatusDialog(false);
       } else {
         throw new Error(
-          response.data.message || "Failed to update order status"
+          response.data.message || 'Failed to update order status'
         );
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "An error occurred";
+        err instanceof Error ? err.message : 'An error occurred';
       toast.error(`Error: ${errorMessage}`);
-      console.error("Failed to update order status:", errorMessage);
+      console.error('Failed to update order status:', errorMessage);
     }
   };
 
   const handleAddShipment = () => {
     if (!trackingNumber || !carrier) {
-      toast.error("Please fill in all required fields");
+      toast.error('Please fill in all required fields');
       return;
     }
-    toast.success("Shipment information added successfully");
+    toast.success('Shipment information added successfully');
     setShowShipmentDialog(false);
-    setTrackingNumber("");
-    setCarrier("");
-    setEstimatedDelivery("");
-    setNotes("");
+    setTrackingNumber('');
+    setCarrier('');
+    setEstimatedDelivery('');
+    setNotes('');
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "Processing":
-        return "bg-blue-100 text-blue-800";
-      case "Shipping":
-        return "bg-purple-100 text-purple-800";
-      case "Delivered":
-        return "bg-green-100 text-green-800";
-      case "Canceled":
-        return "bg-red-100 text-red-800";
+      case 'Pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Processing':
+        return 'bg-blue-100 text-blue-800';
+      case 'Shipping':
+        return 'bg-purple-100 text-purple-800';
+      case 'Delivered':
+        return 'bg-green-100 text-green-800';
+      case 'Canceled':
+        return 'bg-red-100 text-red-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -189,7 +190,7 @@ export function OrderDetail({
         </div>
         <Card className="p-6 bg-red-50 border border-red-200">
           <p className="text-red-800">
-            Error: {error || "Failed to load order details"}
+            Error: {error || 'Failed to load order details'}
           </p>
         </Card>
       </div>
@@ -233,7 +234,7 @@ export function OrderDetail({
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Order Date:</span>
-                <span>{new Date(order.orderDate).toLocaleDateString()}</span>
+                <span>{formatUtcDate(order.orderDate)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Order Code:</span>
@@ -261,10 +262,10 @@ export function OrderDetail({
                   >
                     <div>
                       <p>
-                        {item.batch?.season?.product?.productName || "Product"}
+                        {item.batch?.season?.product?.productName || 'Product'}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Quantity: {item.quantity} {item.batch?.units || "units"}
+                        Quantity: {item.quantity} {item.batch?.units || 'units'}
                       </p>
                     </div>
                     <p>{formatVND(item.quantity * item.unitPrice)}</p>

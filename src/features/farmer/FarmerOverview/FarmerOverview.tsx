@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { Card } from "../../../components/ui/card";
-import { formatVND } from "../../../components/ui/utils";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Card } from '../../../components/ui/card';
+import { formatVND } from '../../../components/ui/utils';
 import {
   LineChart,
   Line,
@@ -14,8 +15,8 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts";
-import { Skeleton } from "../../../components/ui/skeleton";
+} from 'recharts';
+import { Skeleton } from '../../../components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -23,16 +24,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
+} from '../../../components/ui/table';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
-import { API } from "../../../api";
-import { DollarSign, Users, Package } from "lucide-react";
+} from '../../../components/ui/select';
+import { API } from '../../../api';
+import { DollarSign, Users, Package } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface RevenueData {
   month: string;
@@ -60,11 +62,14 @@ interface TopProduct {
   amount: number;
 }
 
-const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
+const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export function FarmerOverview() {
+  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState<string>(currentYear.toString());
+  const [selectedYear, setSelectedYear] = useState<string>(
+    currentYear.toString()
+  );
   const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
   const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
@@ -77,11 +82,11 @@ export function FarmerOverview() {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem("token");
-        const storedFarmId = localStorage.getItem("farmId");
+        const token = localStorage.getItem('token');
+        const storedFarmId = localStorage.getItem('farmId');
 
         if (!token) {
-          throw new Error("No authentication token found");
+          throw new Error('No authentication token found');
         }
 
         if (storedFarmId) {
@@ -98,26 +103,85 @@ export function FarmerOverview() {
           const farm = farmResponse.data.data;
 
           if (farm && farm.farmId) {
-            localStorage.setItem("farmId", farm.farmId);
+            localStorage.setItem('farmId', farm.farmId);
             await fetchOverviewData(farm.farmId, token, parseInt(selectedYear));
           }
         }
       } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "An error occurred while loading overview data"
-        );
+        console.error('Error fetching data:', err);
+
+        // Check if farm exists when error occurs
+        await checkFarmExistence();
       } finally {
         setLoading(false);
       }
     };
 
     fetchFarmAndData();
-  }, [selectedYear]);
+  }, [selectedYear, navigate]);
 
-  const fetchOverviewData = async (farmId: string, token: string, year: number) => {
+  const checkFarmExistence = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('No authentication token found');
+        return;
+      }
+
+      const farmApi = axios.create({
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const farmResponse = await farmApi.get(API.farm.me);
+
+      // If farm doesn't exist
+      if (!farmResponse.data.success) {
+        toast.error(
+          'Please create a farm to view your overview. Redirecting to Farm Management...'
+        );
+
+        // Navigate to farm manage page after 5 seconds
+        setTimeout(() => {
+          navigate('/farmer/farms');
+        }, 5000);
+
+        return;
+      }
+
+      // If we reach here, there's a different error
+      setError(
+        'An error occurred while loading overview data. Please try again.'
+      );
+    } catch (err) {
+      console.error('Error checking farm existence:', err);
+
+      // Check if it's a farm not found error
+      if (
+        err instanceof Error &&
+        'response' in err &&
+        (err as any).response?.data?.message?.includes('Can not found farm')
+      ) {
+        toast.error(
+          'Please create a farm to view your overview. Redirecting to Farm Management...'
+        );
+
+        // Navigate to farm manage page after 5 seconds
+        setTimeout(() => {
+          navigate('/farmer/farms');
+        }, 5000);
+      } else {
+        setError('Failed to load overview data');
+      }
+    }
+  };
+
+  const fetchOverviewData = async (
+    farmId: string,
+    token: string,
+    year: number
+  ) => {
     const api = axios.create({
       headers: {
         Authorization: `Bearer ${token}`,
@@ -130,13 +194,15 @@ export function FarmerOverview() {
         `${API.base}/farms/${farmId}/revenue?year=${year}`
       );
       if (revenueResponse.data.success) {
-        const monthlyData = revenueResponse.data.data.map((item: RevenueData) => ({
-          month: new Date(2024, parseInt(item.month) - 1).toLocaleString(
-            "default",
-            { month: "short" }
-          ),
-          amount: item.amount,
-        }));
+        const monthlyData = revenueResponse.data.data.map(
+          (item: RevenueData) => ({
+            month: new Date(2024, parseInt(item.month) - 1).toLocaleString(
+              'default',
+              { month: 'short' }
+            ),
+            amount: item.amount,
+          })
+        );
         setRevenueData(monthlyData);
       }
 
@@ -156,7 +222,7 @@ export function FarmerOverview() {
         setTopProducts(productsResponse.data.data);
       }
     } catch (err) {
-      console.error("Error fetching overview data:", err);
+      console.error('Error fetching overview data:', err);
       throw err;
     }
   };
@@ -194,7 +260,9 @@ export function FarmerOverview() {
       {/* Year Selector */}
       <div className="flex justify-end">
         <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-gray-700">Select Year:</label>
+          <label className="text-sm font-medium text-gray-700">
+            Select Year:
+          </label>
           <Select value={selectedYear} onValueChange={setSelectedYear}>
             <SelectTrigger className="w-[120px]">
               <SelectValue />
@@ -231,7 +299,9 @@ export function FarmerOverview() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Top Customers</p>
-              <p className="text-3xl font-bold text-blue-700">{totalCustomers}</p>
+              <p className="text-3xl font-bold text-blue-700">
+                {totalCustomers}
+              </p>
               <p className="text-xs text-blue-600 mt-2">Tracked this year</p>
             </div>
             <div className="p-3 bg-blue-200 rounded-lg">
@@ -244,7 +314,9 @@ export function FarmerOverview() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Top Products</p>
-              <p className="text-3xl font-bold text-purple-700">{totalProducts}</p>
+              <p className="text-3xl font-bold text-purple-700">
+                {totalProducts}
+              </p>
               <p className="text-xs text-purple-600 mt-2">Best sellers</p>
             </div>
             <div className="p-3 bg-purple-200 rounded-lg">
@@ -264,9 +336,9 @@ export function FarmerOverview() {
             <YAxis stroke="#6b7280" />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#f9fafb",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
+                backgroundColor: '#f9fafb',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
               }}
               formatter={(value) => `₫${(value as number).toLocaleString()}`}
             />
@@ -276,7 +348,7 @@ export function FarmerOverview() {
               dataKey="amount"
               stroke="#10b981"
               strokeWidth={2}
-              dot={{ fill: "#10b981", r: 4 }}
+              dot={{ fill: '#10b981', r: 4 }}
               activeDot={{ r: 6 }}
               name="Revenue"
             />
@@ -335,7 +407,9 @@ export function FarmerOverview() {
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie
-                    data={topProducts as Array<{product: Product; amount: number}>}
+                    data={
+                      topProducts as Array<{ product: Product; amount: number }>
+                    }
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -350,14 +424,15 @@ export function FarmerOverview() {
                       />
                     ))}
                   </Pie>
-                  <Tooltip
-                    formatter={(value) => `${value} units`}
-                  />
+                  <Tooltip formatter={(value) => `${value} units`} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="mt-4 space-y-2">
                 {topProducts.map((item, index) => (
-                  <div key={item.product.productId} className="flex items-center">
+                  <div
+                    key={item.product.productId}
+                    className="flex items-center"
+                  >
                     <span
                       className="inline-block w-3 h-3 rounded-full mr-2"
                       style={{ backgroundColor: COLORS[index % COLORS.length] }}

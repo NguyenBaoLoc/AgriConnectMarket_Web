@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   ArrowLeft,
   MapPin,
@@ -8,16 +8,17 @@ import {
   Home,
   Sprout,
   Info,
-} from "lucide-react";
-import { Button } from "../../../components/ui/button";
+} from 'lucide-react';
+import { Button } from '../../../components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Badge } from "../../../components/ui/badge";
-import { Separator } from "../../../components/ui/separator";
+} from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
+import { formatUtcDate } from '../../../utils/timeUtils';
+import { Separator } from '../../../components/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -25,89 +26,112 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
-import { Textarea } from "../../../components/ui/textarea";
-import { Label } from "../../../components/ui/label";
-import { toast } from "sonner";
-import { useNavigate, useParams } from "react-router-dom";
-import type { Farm } from "./types";
-import { getFarmDetail } from "./api";
+} from '../../../components/ui/dialog';
+import { toast } from 'sonner';
+import { useNavigate, useParams } from 'react-router-dom';
+import type { Farm } from './types';
+import { getFarmDetail, banFarm } from './api';
 
 const defaultFarm: Farm = {
-  id: "",
-  farmName: "",
-  farmDesc: "",
-  batchCodePrefix: "",
-  bannerUrl: "",
-  phone: "",
-  area: "",
+  id: '',
+  farmName: '',
+  farmDesc: '',
+  batchCodePrefix: '',
+  bannerUrl: '',
+  phone: '',
+  area: '',
   isDelete: false,
   isBanned: false,
   isValidForSelling: false,
   isConfirmAsMall: false,
-  createdAt: "",
-  farmerId: "",
-  addressId: "",
+  createdAt: '',
+  farmerId: '',
+  addressId: '',
 };
 export function FarmDetail() {
   const [farm, setFarm] = useState<Farm>(defaultFarm);
   const [showBanModal, setShowBanModal] = useState(false);
   const [showUnbanModal, setShowUnbanModal] = useState(false);
-  const [banReason, setBanReason] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingBan, setIsLoadingBan] = useState(false);
+  const [isLoadingUnban, setIsLoadingUnban] = useState(false);
   const { farmId } = useParams();
   const navigate = useNavigate();
 
   const onBack = () => {
-    navigate("/admin/farms");
+    navigate('/admin/farms');
   };
 
   const getStatusBadges = (farm: Farm) => {
     const badges: {
       label: string;
-      variant: "default" | "secondary" | "destructive" | "outline";
+      variant: 'default' | 'secondary' | 'destructive' | 'outline';
     }[] = [];
-    if (farm.isBanned) badges.push({ label: "Banned", variant: "destructive" });
+    if (farm.isBanned) badges.push({ label: 'Banned', variant: 'destructive' });
     if (!farm.isValidForSelling)
-      badges.push({ label: "Not Verified", variant: "secondary" });
+      badges.push({ label: 'Not Verified', variant: 'secondary' });
     if (farm.isConfirmAsMall)
-      badges.push({ label: "Confirmed as Mall", variant: "default" });
-    if (farm.isDelete) badges.push({ label: "Deleted", variant: "outline" });
+      badges.push({ label: 'Confirmed as Mall', variant: 'default' });
+    if (farm.isDelete) badges.push({ label: 'Deleted', variant: 'outline' });
     return badges;
   };
 
-  const formatAddress = (address: Farm["address"]) => {
-    if (!address) return "No address provided";
+  const formatAddress = (address: Farm['address']) => {
+    if (!address) return 'No address provided';
     return `${address.detail}, ${address.ward}, ${address.district}, ${address.province}`;
   };
 
-  const handleBan = () => {
-    if (!banReason.trim()) {
-      return;
+  const handleBan = async () => {
+    try {
+      setIsLoadingBan(true);
+      const response = await banFarm(farmId || '');
+      if (response.success) {
+        toast.success('Farm has been banned');
+        setShowBanModal(false);
+        // Refresh farm data
+        const detailResponse = await getFarmDetail(farmId || '');
+        if (detailResponse.success && detailResponse.data) {
+          setFarm(detailResponse.data);
+        }
+      } else {
+        toast.error(`Failed to ban farm: ${response.message}`);
+      }
+    } catch (error) {
+      console.error('Error banning farm:', error);
+      toast.error(
+        (error as any).response?.data?.message || 'Error banning farm'
+      );
+    } finally {
+      setIsLoadingBan(false);
     }
-    toast.success("Farm has been banned");
-    setShowBanModal(false);
-    setBanReason("");
   };
 
   const handleUnban = () => {
-    toast.success("Farm has been unbanned");
-    setShowUnbanModal(false);
+    try {
+      setIsLoadingUnban(true);
+      toast.success('Farm has been unbanned');
+      setShowUnbanModal(false);
+    } catch (error) {
+      console.error('Error unbanning farm:', error);
+      toast.error('Error unbanning farm');
+    } finally {
+      setIsLoadingUnban(false);
+    }
   };
 
   useEffect(() => {
     const fetchFarmDetail = async () => {
       try {
         setIsLoading(true);
-        const response = await getFarmDetail(farmId || "");
+        const response = await getFarmDetail(farmId || '');
         if (response.success && response.data) {
           setFarm(response.data);
         } else {
           toast.error(`Get Farm Detail failed: ${response.message}`);
         }
       } catch (error) {
-        console.error("Error fetching farm details:", error);
-        toast.error("Error loading farm details");
+        console.error('Error fetching farm details:', error);
+        toast.error('Error loading farm details');
       } finally {
         setIsLoading(false);
       }
@@ -184,7 +208,7 @@ export function FarmDetail() {
                       <div className="flex items-center gap-3">
                         <User className="w-4 h-4 text-muted-foreground" />
                         <span className="text-sm">
-                          {farm.farmer?.userName || "—"}
+                          {farm.farmer?.userName || '—'}
                         </span>
                       </div>
                       <div className="flex items-center gap-3">
@@ -214,13 +238,13 @@ export function FarmDetail() {
                           Batch Code Prefix
                         </p>
                         <p className="text-sm font-medium">
-                          {farm.batchCodePrefix || "—"}
+                          {farm.batchCodePrefix || '—'}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Created</p>
                         <p className="text-sm font-medium">
-                          {new Date(farm.createdAt).toLocaleDateString()}
+                          {formatUtcDate(farm.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -256,11 +280,11 @@ export function FarmDetail() {
                           </div>
                           <Badge
                             variant={
-                              season.status === "Pending"
-                                ? "secondary"
-                                : season.status === "Active"
-                                ? "default"
-                                : "outline"
+                              season.status === 'Pending'
+                                ? 'secondary'
+                                : season.status === 'Active'
+                                ? 'default'
+                                : 'outline'
                             }
                           >
                             {season.status}
@@ -269,10 +293,8 @@ export function FarmDetail() {
                         <div className="flex gap-4 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
-                            {new Date(
-                              season.startDate
-                            ).toLocaleDateString()} to{" "}
-                            {new Date(season.endDate).toLocaleDateString()}
+                            {formatUtcDate(season.startDate)} to{' '}
+                            {formatUtcDate(season.endDate)}
                           </div>
                         </div>
                       </div>
@@ -285,6 +307,33 @@ export function FarmDetail() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Info className="w-5 h-5" />
+                  <CardTitle>Actions</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {!farm.isBanned ? (
+                  <Button
+                    variant="outline"
+                    className="w-full text-red-600 hover:text-red-700"
+                    onClick={() => setShowBanModal(true)}
+                  >
+                    Ban Farm
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full text-green-600 hover:text-green-700"
+                    onClick={() => setShowUnbanModal(true)}
+                  >
+                    Unban Farm
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
             {/* Farmer Info */}
             {farm.farmer && (
               <Card>
@@ -310,9 +359,9 @@ export function FarmDetail() {
                   <div>
                     <p className="text-sm text-muted-foreground">Status</p>
                     <Badge
-                      variant={farm.farmer.isActive ? "default" : "destructive"}
+                      variant={farm.farmer.isActive ? 'default' : 'destructive'}
                     >
-                      {farm.farmer.isActive ? "Active" : "Inactive"}
+                      {farm.farmer.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
                   <Separator />
@@ -320,8 +369,8 @@ export function FarmDetail() {
                     <p className="text-sm text-muted-foreground">Verified At</p>
                     <p className="text-sm font-medium">
                       {farm.farmer.verifiedAt
-                        ? new Date(farm.farmer.verifiedAt).toLocaleDateString()
-                        : "Not verified"}
+                        ? formatUtcDate(farm.farmer.verifiedAt)
+                        : 'Not verified'}
                     </p>
                   </div>
                 </CardContent>
@@ -361,38 +410,6 @@ export function FarmDetail() {
                 </CardContent>
               </Card>
             )}
-
-            {/* Farm Status & Actions */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Info className="w-5 h-5" />
-                  <CardTitle>Actions</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button className="w-full bg-green-600 hover:bg-green-700">
-                  Contact Farmer
-                </Button>
-                {!farm.isBanned ? (
-                  <Button
-                    variant="outline"
-                    className="w-full text-red-600 hover:text-red-700"
-                    onClick={() => setShowBanModal(true)}
-                  >
-                    Ban Farm
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="w-full text-green-600 hover:text-green-700"
-                    onClick={() => setShowUnbanModal(true)}
-                  >
-                    Unban Farm
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
@@ -407,33 +424,22 @@ export function FarmDetail() {
               them from listing products and receiving orders.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="ban-reason">Reason for banning (required)</Label>
-              <Textarea
-                id="ban-reason"
-                placeholder="Enter the reason for banning this farm..."
-                value={banReason}
-                onChange={(e) => setBanReason(e.target.value)}
-                rows={4}
-              />
-            </div>
-          </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => {
-                setShowBanModal(false);
-                setBanReason("");
-              }}
+              onClick={() => setShowBanModal(false)}
+              disabled={isLoadingBan}
             >
               Cancel
             </Button>
             <Button
               className="bg-red-600 hover:bg-red-700"
               onClick={handleBan}
-              disabled={!banReason.trim()}
+              disabled={isLoadingBan}
             >
+              {isLoadingBan && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              )}
               Yes, Ban Farm
             </Button>
           </DialogFooter>
@@ -451,13 +457,21 @@ export function FarmDetail() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowUnbanModal(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowUnbanModal(false)}
+              disabled={isLoadingUnban}
+            >
               Cancel
             </Button>
             <Button
               className="bg-green-600 hover:bg-green-700"
               onClick={handleUnban}
+              disabled={isLoadingUnban}
             >
+              {isLoadingUnban && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              )}
               Yes, Unban Farm
             </Button>
           </DialogFooter>

@@ -1,4 +1,4 @@
-type UserRole = "Guest" | "Admin" | "Buyer" | "Farmer";
+type UserRole = 'Guest' | 'Admin' | 'Buyer' | 'Farmer' | 'Moderator';
 
 interface ApiResponse<T = undefined> {
   success: boolean;

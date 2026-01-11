@@ -9,6 +9,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
+import { formatUtcDate } from '../../../utils/timeUtils';
 import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { toast } from 'sonner';
@@ -178,7 +179,7 @@ export function PreOrderConfirmationPage() {
                   </span>
                 </div>
                 <p className="text-lg font-semibold text-gray-900">
-                  {new Date(orderData.orderDate).toLocaleDateString('vi-VN')}
+                  {formatUtcDate(orderData.orderDate)}
                 </p>
               </div>
 
@@ -203,7 +204,7 @@ export function PreOrderConfirmationPage() {
                     </span>
                   </div>
                   <p className="text-lg font-semibold text-gray-900">
-                    {new Date(harvestDate).toLocaleDateString('vi-VN')}
+                    {formatUtcDate(harvestDate)}
                   </p>
                 </div>
               )}

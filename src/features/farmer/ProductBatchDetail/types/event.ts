@@ -1,9 +1,21 @@
-import type { ApiResponse } from "../../../../types";
+import type { ApiResponse } from '../../../../types';
+
+export interface PayloadField {
+  name: string;
+  label: string;
+  type: 'text' | 'number' | 'email' | 'date' | 'textarea' | 'select';
+  required: boolean;
+  placeholder?: string;
+  options?: { label: string; value: string }[];
+  min?: number;
+  max?: number;
+}
 
 export interface EventType {
   id: string;
   eventTypeName: string;
   eventTypeDesc: string;
+  payloadFields?: string; // JSON string array of field labels
 }
 
 export interface EventTypesResponse extends ApiResponse<EventType[]> {}

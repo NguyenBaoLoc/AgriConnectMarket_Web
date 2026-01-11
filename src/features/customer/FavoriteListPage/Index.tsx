@@ -5,7 +5,7 @@ import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Pagination } from '../../../components/Pagination';
 import { toast } from 'sonner';
-import { getMyFavoriteFarms, removeFavoriteFarm } from '../FavoriteFarms/api';
+import { getMyFavoriteFarms, toggleFavoriteFarm } from '../FavoriteFarms/api';
 import { useNavigate } from 'react-router-dom';
 import { Footer } from '../components';
 
@@ -63,9 +63,13 @@ export function FavoriteListPage({
   const handleRemoveFromFavorites = async (farmId: string) => {
     try {
       setIsRemoving(farmId);
-      await removeFavoriteFarm(farmId);
-      setFavorites((prev) => prev.filter((item) => item.farm.id !== farmId));
-      toast.success('Removed from favorites');
+      const res = await toggleFavoriteFarm(farmId);
+      if (res && res.success && res.data === 'removed') {
+        setFavorites((prev) => prev.filter((item) => item.farm.id !== farmId));
+        toast.success('Removed from favorites');
+      } else {
+        toast.error('Failed to remove from favorites');
+      }
     } catch (error) {
       console.error('Error removing favorite farm:', error);
       toast.error('Failed to remove from favorites');
@@ -263,7 +267,7 @@ export function FavoriteListPage({
             </p>
             <Button
               className="bg-green-600 hover:bg-green-700"
-              onClick={handleBrowseProducts}
+              onClick={() => navigate('/farms')}
             >
               Browse Farms
             </Button>

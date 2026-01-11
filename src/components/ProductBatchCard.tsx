@@ -1,9 +1,15 @@
 import { ShoppingCart, Heart, Leaf, Calendar, Droplet } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
+import { BuyNowModal } from './BuyNowModal';
+import { formatUtcDate } from '../utils/timeUtils';
 import { useCart } from '../hooks/useCart';
 import { formatVND } from './ui/utils';
+import { getAddresses } from '../features/customer/CheckoutPage/api';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import type { ProductBatch } from '../features/customer/ProductPage/types';
 
 interface ProductBatchCardProps extends ProductBatch {
@@ -26,10 +32,76 @@ export function ProductBatchCard({
   imageUrls,
   onNavigateToProductDetails,
 }: ProductBatchCardProps) {
+  const navigate = useNavigate();
   const { handleAddToCart: addToCart } = useCart();
+  const [showBuyNowModal, setShowBuyNowModal] = useState(false);
+  const [isProcessingBuyNow, setIsProcessingBuyNow] = useState(false);
 
   const handleAddToCart = () => {
     addToCart(id, 1);
+  };
+
+  const handleBuyNowClick = () => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Please login to buy products');
+      return;
+    }
+    setShowBuyNowModal(true);
+  };
+
+  const handleBuyNowModalConfirm = async (quantity: number) => {
+    try {
+      setIsProcessingBuyNow(true);
+
+      const token = localStorage.getItem('token');
+      const customerId = localStorage.getItem('userId');
+
+      if (!token || !customerId) {
+        toast.error('Please login to buy products');
+        setShowBuyNowModal(false);
+        return;
+      }
+
+      // Get user's addresses
+      const addressResponse = await getAddresses();
+      if (
+        !addressResponse.success ||
+        !addressResponse.data ||
+        addressResponse.data.length === 0
+      ) {
+        toast.error('Please add a delivery address before purchasing');
+        setShowBuyNowModal(false);
+        return;
+      }
+
+      // Navigate to checkout with the Buy Now product
+      // We'll pass the product details via state
+      navigate('/checkout', {
+        state: {
+          isBuyNow: true,
+          buyNowProduct: {
+            batchId: id,
+            quantity: quantity,
+            productName: product,
+            price: price,
+            units: units,
+          },
+        },
+      });
+
+      setShowBuyNowModal(false);
+    } catch (error) {
+      console.error('Error in Buy Now:', error);
+      toast.error('Failed to process Buy Now');
+    } finally {
+      setIsProcessingBuyNow(false);
+    }
+  };
+
+  const handleBuyNowModalCancel = () => {
+    setShowBuyNowModal(false);
   };
 
   const defaultImage =
@@ -39,20 +111,11 @@ export function ProductBatchCard({
       ? imageUrls[0]
       : defaultImage;
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+  const formatDate = (dateString: string) => formatUtcDate(dateString);
 
   const batchCodeValue =
     typeof batchCode === 'string' ? batchCode : batchCode.value;
   const isOutOfStock = harvestDate !== null && avaibleQuantity === 0;
-
-  console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa", isOutOfStock);
 
   return (
     <Card className="group overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
@@ -173,9 +236,29 @@ export function ProductBatchCard({
               <ShoppingCart className="h-4 w-4 mr-2" />
               {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
             </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full mt-2 font-medium border-green-600 text-green-600 hover:bg-green-50"
+              onClick={handleBuyNowClick}
+              disabled={isOutOfStock || isProcessingBuyNow}
+            >
+              {isProcessingBuyNow ? 'Processing...' : 'Buy Now'}
+            </Button>
           </div>
         </div>
       </CardContent>
+
+      <BuyNowModal
+        isOpen={showBuyNowModal}
+        productName={product}
+        units={units}
+        availableQuantity={avaibleQuantity}
+        price={price}
+        onConfirm={handleBuyNowModalConfirm}
+        onCancel={handleBuyNowModalCancel}
+      />
     </Card>
   );
 }

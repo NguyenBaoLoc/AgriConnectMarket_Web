@@ -1,7 +1,7 @@
-import axios from "axios";
-import type { ApiResponse } from "../../../../types";
-import { API } from "../../../../api";
-import type { CreateOrderRequest, CreateOrderResponse } from "../types";
+import axios from 'axios';
+import type { ApiResponse } from '../../../../types';
+import { API } from '../../../../api';
+import type { CreateOrderRequest, CreateOrderResponse } from '../types';
 
 export interface Address {
   id: string;
@@ -20,7 +20,7 @@ export type AddressListResponse = ApiResponse<Address[]>;
 
 export async function getAddresses(): Promise<AddressListResponse> {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     const response = await axios.get<AddressListResponse>(API.address.me, {
@@ -30,10 +30,10 @@ export async function getAddresses(): Promise<AddressListResponse> {
   } catch (error) {
     if (
       error instanceof Error &&
-      "response" in error &&
+      'response' in error &&
       error.response &&
-      typeof error.response === "object" &&
-      "data" in error.response
+      typeof error.response === 'object' &&
+      'data' in error.response
     ) {
       return (error.response as { data: AddressListResponse }).data;
     }
@@ -47,7 +47,7 @@ export async function getShippingFee(
   weight: number
 ): Promise<ShippingFeeResponse> {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     const params = new URLSearchParams({
@@ -63,10 +63,10 @@ export async function getShippingFee(
   } catch (error) {
     if (
       error instanceof Error &&
-      "response" in error &&
+      'response' in error &&
       error.response &&
-      typeof error.response === "object" &&
-      "data" in error.response
+      typeof error.response === 'object' &&
+      'data' in error.response
     ) {
       return (error.response as { data: ShippingFeeResponse }).data;
     }
@@ -78,7 +78,7 @@ export async function createOrder(
   payload: CreateOrderRequest
 ): Promise<CreateOrderResponse> {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     const response = await axios.post<CreateOrderResponse>(
@@ -90,10 +90,10 @@ export async function createOrder(
   } catch (error) {
     if (
       error instanceof Error &&
-      "response" in error &&
+      'response' in error &&
       error.response &&
-      typeof error.response === "object" &&
-      "data" in error.response
+      typeof error.response === 'object' &&
+      'data' in error.response
     ) {
       return (error.response as { data: CreateOrderResponse }).data;
     }
@@ -101,46 +101,47 @@ export async function createOrder(
   }
 }
 
-export async function initiatePayment(
-  orderId: string
-): Promise<any> {
+export async function initiatePayment(orderId: string[]): Promise<any> {
   try {
-    const token = localStorage.getItem("token");
-    const headers = token ? { 
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    } : {
-      'Content-Type': 'application/json'
-    };
+    const token = localStorage.getItem('token');
+    const headers = token
+      ? {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      : {
+          'Content-Type': 'application/json',
+        };
 
     const paymentPayload = { orderId };
-    console.log("Payment API payload:", paymentPayload);
+    console.log('Payment API payload:', paymentPayload);
 
     const response = await axios.post<any>(
-      `${API.order.create.replace("/orders", "/payments")}`,
+      `${API.order.create.replace('/orders', '/payments')}`,
       paymentPayload,
       { headers }
     );
-    
+
     // Handle both response formats:
     // Format 1: { success: true, data: { paymentUrl: "..." } }
     // Format 2: { paymentUrl: "..." }
     const responseData = response.data;
-    console.log("Payment response:", responseData);
-    
+    console.log('Payment response:', responseData);
+
     return {
       success: true,
       data: {
-        paymentUrl: responseData.paymentUrl || responseData.data?.paymentUrl || null
-      }
+        paymentUrl:
+          responseData.paymentUrl || responseData.data?.paymentUrl || null,
+      },
     };
   } catch (error) {
     if (
       error instanceof Error &&
-      "response" in error &&
+      'response' in error &&
       error.response &&
-      typeof error.response === "object" &&
-      "data" in error.response
+      typeof error.response === 'object' &&
+      'data' in error.response
     ) {
       return (error.response as { data: ApiResponse<any> }).data;
     }
@@ -152,7 +153,7 @@ export async function getOrderByCode(
   orderCode: string
 ): Promise<CreateOrderResponse> {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     const response = await axios.get<CreateOrderResponse>(
@@ -163,10 +164,10 @@ export async function getOrderByCode(
   } catch (error) {
     if (
       error instanceof Error &&
-      "response" in error &&
+      'response' in error &&
       error.response &&
-      typeof error.response === "object" &&
-      "data" in error.response
+      typeof error.response === 'object' &&
+      'data' in error.response
     ) {
       return (error.response as { data: CreateOrderResponse }).data;
     }

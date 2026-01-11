@@ -18,41 +18,75 @@ export function PaymentResultPage() {
   const [paymentStatus, setPaymentStatus] = useState<
     'processing' | 'success' | 'failed'
   >('processing');
-  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [orderDetails, setOrderDetails] = useState<any[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const processPaymentResult = async () => {
       try {
-        const responseCode = search.get('responseCode');
-        const orderInfo = search.get('orderCode');
+        const errorMessage = search.get('errorMessage');
 
-        if (!responseCode || !orderInfo) {
+        if (errorMessage) {
           setPaymentStatus('failed');
-          setErrorMessage('Invalid payment response');
+          setErrorMessage(errorMessage);
           return;
         }
 
+        const responseCode = search.get('responseCode');
+        const orderInfo = search.get('orderCode');
+
         if (responseCode === '00') {
-          // Payment successful - fetch order details
+          // Payment successful - fetch order details for all orders
           try {
-            const orderResponse = await getOrderByCode(orderInfo);
-            console.log('Full order response:', orderResponse);
-            console.log('Response keys:', Object.keys(orderResponse || {}));
-            console.log('Response.data:', orderResponse?.data);
+            // Parse multiple order codes from plain string
+            // Order codes format: "ORD-{timestamp}-{random}ORD-{timestamp}-{random}..."
+            // Split by "ORD-" to identify each order code
+            const orderCodeParts = orderInfo
+              .split('ORD-')
+              .filter((part: string) => part.length > 0);
+            const orderCodeList = orderCodeParts.map(
+              (part: string) => `ORD-${part}`
+            );
 
-            // Extract orderData - handle different response formats
-            const orderData = orderResponse?.data || orderResponse;
+            console.log('Processing order codes:', orderCodeList);
 
-            console.log('Extracted orderData:', orderData);
-            console.log('OrderData keys:', Object.keys(orderData || {}));
+            if (orderCodeList.length === 0) {
+              setPaymentStatus('failed');
+              setErrorMessage('No valid order codes found');
+              return;
+            }
 
-            if (orderData && (orderData.orderCode || orderData.id)) {
+            // Fetch order details for each order code
+            const allOrderDetails: any[] = [];
+            for (const orderCode of orderCodeList) {
+              try {
+                console.log(`Fetching order details for: ${orderCode}`);
+                const orderResponse = await getOrderByCode(orderCode);
+                console.log(`Order response for ${orderCode}:`, orderResponse);
+
+                const orderData = orderResponse?.data || orderResponse;
+
+                if (orderData && (orderData.orderCode || orderData.id)) {
+                  allOrderDetails.push(orderData);
+                } else {
+                  console.warn(
+                    `Invalid or missing order data for code: ${orderCode}`
+                  );
+                }
+              } catch (error) {
+                console.error(
+                  `Error fetching order details for ${orderCode}:`,
+                  error
+                );
+              }
+            }
+
+            if (allOrderDetails.length > 0) {
               setPaymentStatus('success');
-              setOrderDetails(orderData);
+              setOrderDetails(allOrderDetails);
             } else {
               setPaymentStatus('failed');
-              setErrorMessage('Invalid or missing order data');
+              setErrorMessage('Could not fetch order details');
             }
           } catch (error) {
             setPaymentStatus('failed');
@@ -124,23 +158,41 @@ export function PaymentResultPage() {
               </h2>
               <p className="text-gray-600 text-sm">
                 Your payment has been processed successfully.
+                {orderDetails.length > 1 &&
+                  ` ${orderDetails.length} orders have been created.`}
               </p>
             </div>
 
-            {orderDetails && (
-              <div className="mt-4 p-3 bg-green-50 rounded text-sm space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Order Code:</span>
-                  <span className="font-mono font-semibold">
-                    {orderDetails.orderCode}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Amount:</span>
-                  <span className="font-semibold text-green-600">
-                    ₫{orderDetails.totalPrice.toLocaleString('vi-VN')}
-                  </span>
-                </div>
+            {orderDetails.length > 0 && (
+              <div className="mt-4 space-y-3 max-h-96 overflow-y-auto">
+                {orderDetails.map((order, index) => (
+                  <div
+                    key={order.id || index}
+                    className="p-3 bg-green-50 rounded text-sm space-y-2 border border-green-200"
+                  >
+                    <div className="font-semibold text-green-700 mb-2">
+                      Order {index + 1}
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Order Code:</span>
+                      <span className="font-mono font-semibold">
+                        {order.orderCode}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Total Amount:</span>
+                      <span className="font-semibold text-green-600">
+                        ₫{order.totalPrice?.toLocaleString('vi-VN') || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Status:</span>
+                      <span className="font-semibold text-blue-600">
+                        {order.orderStatus || 'Pending'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 

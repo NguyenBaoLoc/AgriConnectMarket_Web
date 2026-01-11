@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Heart, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
+import {
+  ArrowLeft,
+  Heart,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle,
+} from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
@@ -8,10 +14,12 @@ import { CertificateViewer } from '../../../components/CertificateViewer';
 import { getFarmDetails, getFarmProductBatches } from './api';
 import { Footer } from '../components';
 import type { FarmData, ProductBatch } from './types';
-import { addFavoriteFarm, getMyFavoriteFarms } from '../FavoriteFarms/api';
+import { toggleFavoriteFarm, getMyFavoriteFarms } from '../FavoriteFarms/api';
 import { ProductBatchCard } from './components/ProductBatchCard';
 import { ReportFarmDialog } from './components/ReportFarmDialog';
 import { toast } from 'sonner';
+import { hasValidCredentials } from '../../../utils/credentialsSettings';
+import { formatUtcDate } from '../../../utils/timeUtils';
 
 export function FarmDetail() {
   const { farmId } = useParams<{ farmId: string }>();
@@ -68,6 +76,14 @@ export function FarmDetail() {
       if (!farm || !farm.id) return;
       try {
         const favs = await getMyFavoriteFarms();
+        console.log(favs);
+
+        if (!favs.success) {
+          console.log(favs.success);
+          setIsFavorited(false);
+          return;
+        }
+        console.log(favs);
         if (Array.isArray(favs)) {
           const exists = favs.some((f) => f?.farm && f.farm.id === farm.id);
           setIsFavorited(Boolean(exists));
@@ -84,20 +100,30 @@ export function FarmDetail() {
   };
 
   const handleAddFavorite = async () => {
+    if (!hasValidCredentials()) {
+      toast.error('You need to be logged in to save farms');
+      return;
+    }
+
     if (!farm?.id) return;
     try {
       setIsFavoriting(true);
-      const res = await addFavoriteFarm(farm.id);
-      // Backends vary: success object or created item
-      if (res && (res.success || res.id || res.farmId)) {
-        toast.success('Added to favorites');
-        setIsFavorited(true);
+      const res = await toggleFavoriteFarm(farm.id);
+
+      if (res && res.success) {
+        if (res.data === 'added') {
+          toast.success('Added to favorites');
+          setIsFavorited(true);
+        } else if (res.data === 'removed') {
+          toast.success('Removed from favorites');
+          setIsFavorited(false);
+        }
       } else {
-        toast.error(res?.message || 'Add to favorites failed');
+        toast.error('Failed to update favorite status');
       }
     } catch (err) {
-      console.error('Error adding favorite', err);
-      toast.error('Add to favorites failed');
+      console.error('Error toggling favorite', err);
+      toast.error('Failed to update favorite status');
     } finally {
       setIsFavoriting(false);
     }
@@ -174,17 +200,12 @@ export function FarmDetail() {
           {/* Favorite Button */}
           <button
             onClick={handleAddFavorite}
-            disabled={isFavoriting || isFavorited}
+            disabled={isFavoriting}
             className={`flex items-center gap-2 px-5 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 ${
               isFavorited
-                ? 'bg-pink-600 text-white'
-                : 'bg-pink-700 text-white hover:from-pink-500 hover:to-red-500'
-            } disabled:bg-pink-600 disabled:opacity-60 disabled:cursor-not-allowed`}
-
-            style={{
-              backgroundColor: 'pink',
-              padding: '0.75rem 2rem'
-            }}
+                ? 'bg-pink-600 text-white hover:bg-pink-700'
+                : 'bg-pink-700 text-white hover:bg-pink-600'
+            } disabled:opacity-60 disabled:cursor-not-allowed`}
           >
             <Heart
               className={`w-5 h-5 transition-all ${
@@ -241,7 +262,9 @@ export function FarmDetail() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Area</p>
-              <p className="text-gray-700">{farm.area}</p>
+              <p className="text-gray-700">
+                {farm.area} m<sup>2</sup>
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Phone</p>
@@ -278,15 +301,11 @@ export function FarmDetail() {
             </div>
             <div className="pt-4 border-t">
               <p className="text-sm text-muted-foreground">Created</p>
-              <p className="text-gray-700">
-                {new Date(farm.createdAt).toLocaleDateString()}
-              </p>
+              <p className="text-gray-700">{formatUtcDate(farm.createdAt)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Updated</p>
-              <p className="text-gray-700">
-                {new Date(farm.updatedAt).toLocaleDateString()}
-              </p>
+              <p className="text-gray-700">{formatUtcDate(farm.updatedAt)}</p>
             </div>
           </div>
         </Card>
@@ -348,8 +367,9 @@ export function FarmDetail() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-600">
-                  Showing {startIndex + 1} to {Math.min(endIndex, batches.length)} of{' '}
-                  {batches.length} batches
+                  Showing {startIndex + 1} to{' '}
+                  {Math.min(endIndex, batches.length)} of {batches.length}{' '}
+                  batches
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -379,7 +399,10 @@ export function FarmDetail() {
 
                       if (!shouldShow) {
                         // Show ellipsis before last page if needed
-                        if (pageNum === currentPage + 2 && currentPage + 2 < totalPages) {
+                        if (
+                          pageNum === currentPage + 2 &&
+                          currentPage + 2 < totalPages
+                        ) {
                           return (
                             <span key={`ellipsis-${pageNum}`} className="px-2">
                               ...
@@ -392,7 +415,9 @@ export function FarmDetail() {
                       return (
                         <Button
                           key={pageNum}
-                          variant={currentPage === pageNum ? 'default' : 'outline'}
+                          variant={
+                            currentPage === pageNum ? 'default' : 'outline'
+                          }
                           size="sm"
                           onClick={() => handlePageClick(pageNum)}
                           className="min-w-10"

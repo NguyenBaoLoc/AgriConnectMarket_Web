@@ -3,6 +3,7 @@ import { Search, Eye, Package, Plus, Leaf, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
+import { formatUtcDate } from '../../../utils/timeUtils';
 import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import {
@@ -276,11 +277,7 @@ export function ProductBatchList() {
                       <TableCell>
                         {Number(batch.price).toLocaleString('vi-VN')}₫
                       </TableCell>
-                      <TableCell>
-                        {new Date(batch.harvestDate).toLocaleDateString(
-                          'vi-VN'
-                        )}
-                      </TableCell>
+                      <TableCell>{formatUtcDate(batch.harvestDate)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-2 justify-end">
                           <Button

@@ -1,7 +1,12 @@
-import type { ApiResponse } from "../../../../types";
+import type { ApiResponse } from '../../../../types';
 
-type OrderStatus = "Pending" | "Processing" | "In Transit" | "Delivered" | "Cancelled";
-type PaymentStatus = "Pending" | "Completed" | "Failed" | "Cancelled";
+type OrderStatus =
+  | 'Pending'
+  | 'Processing'
+  | 'Shipping'
+  | 'Delivered'
+  | 'Cancelled';
+type PaymentStatus = 'Pending' | 'Completed' | 'Failed' | 'Cancelled';
 
 interface OrderItem {
   orderId: string;

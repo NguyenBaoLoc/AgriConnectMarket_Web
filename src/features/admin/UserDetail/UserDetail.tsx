@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { formatUtcDate, formatUtcDateTime } from '../../../utils/timeUtils';
 import {
   ArrowLeft,
   Mail,
@@ -9,15 +10,15 @@ import {
   Lock,
   ShoppingCart,
   Tractor,
-} from "lucide-react";
-import { Button } from "../../../components/ui/button";
+} from 'lucide-react';
+import { Button } from '../../../components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Badge } from "../../../components/ui/badge";
+} from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -25,19 +26,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
-import { Textarea } from "../../../components/ui/textarea";
-import { Label } from "../../../components/ui/label";
-import { toast } from "sonner";
-import { useNavigate, useParams } from "react-router-dom";
-import { getUserProfile, getProfileOrders, getFarmByAccountId } from "./api";
-import type { UserProfile } from "./types";
+} from '../../../components/ui/dialog';
+import { Textarea } from '../../../components/ui/textarea';
+import { Label } from '../../../components/ui/label';
+import { toast } from 'sonner';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getUserProfile, getProfileOrders, getFarmByAccountId } from './api';
+import type { UserProfile } from './types';
 
 export function UserDetail() {
-  const [userStatus, setUserStatus] = useState<"active" | "banned">("active");
+  const [userStatus, setUserStatus] = useState<'active' | 'banned'>('active');
   const [showBanModal, setShowBanModal] = useState(false);
   const [showUnbanModal, setShowUnbanModal] = useState(false);
-  const [banReason, setBanReason] = useState("");
+  const [banReason, setBanReason] = useState('');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showOrdersModal, setShowOrdersModal] = useState(false);
@@ -62,8 +63,8 @@ export function UserDetail() {
         toast.error(`Failed to fetch orders: ${response.message}`);
       }
     } catch (error) {
-      console.error("Error fetching orders:", error);
-      toast.error("Failed to load orders");
+      console.error('Error fetching orders:', error);
+      toast.error('Failed to load orders');
     } finally {
       setOrdersLoading(false);
     }
@@ -81,21 +82,21 @@ export function UserDetail() {
         toast.error(`Failed to fetch farm: ${response.message}`);
       }
     } catch (error) {
-      console.error("Error fetching farm:", error);
-      toast.error("Failed to load farm details");
+      console.error('Error fetching farm:', error);
+      toast.error('Failed to load farm details');
     } finally {
       setFarmLoading(false);
     }
   };
 
   const onBack = () => {
-    navigate("/admin/users");
+    navigate('/admin/users');
   };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!userId) {
-        toast.error("User ID not found");
+        toast.error('User ID not found');
         return;
       }
       try {
@@ -107,8 +108,8 @@ export function UserDetail() {
           toast.error(`Failed to fetch user profile: ${response.message}`);
         }
       } catch (error) {
-        console.error("Error fetching user profile:", error);
-        toast.error("Failed to load user profile");
+        console.error('Error fetching user profile:', error);
+        toast.error('Failed to load user profile');
       } finally {
         setIsLoading(false);
       }
@@ -120,63 +121,59 @@ export function UserDetail() {
   // User data from API
   const user = {
     id: userId,
-    name: userProfile?.fullname || "N/A",
-    email: userProfile?.email || "N/A",
-    phone: userProfile?.phone || "N/A",
+    name: userProfile?.fullname || 'N/A',
+    email: userProfile?.email || 'N/A',
+    phone: userProfile?.phone || 'N/A',
     joinDate: userProfile?.createdAt
-      ? new Date(userProfile.createdAt).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
-      : "N/A",
+      ? formatUtcDate(userProfile.createdAt)
+      : 'N/A',
   };
 
   const handleBan = () => {
     if (!banReason.trim()) {
       return;
     }
-    setUserStatus("banned");
+    setUserStatus('banned');
     setShowBanModal(false);
-    setBanReason("");
-    toast.success("Customer has been banned");
+    setBanReason('');
+    toast.success('Customer has been banned');
   };
 
   const handleUnban = () => {
-    setUserStatus("active");
+    setUserStatus('active');
     setShowUnbanModal(false);
-    toast.success("Customer has been unbanned");
+    toast.success('Customer has been unbanned');
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
-        return "bg-green-100 text-green-700";
-      case "inactive":
-        return "bg-gray-100 text-gray-700";
-      case "banned":
-        return "bg-red-100 text-red-700";
+      case 'active':
+        return 'bg-green-100 text-green-700';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-700';
+      case 'banned':
+        return 'bg-red-100 text-red-700';
       default:
-        return "bg-gray-100 text-gray-700";
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
   const getOrderStatusColor = (status: string) => {
     switch (status) {
-      case "Pending":
-        return "bg-yellow-100 text-yellow-700";
-      case "Confirmed":
-        return "bg-blue-100 text-blue-700";
-      case "Shipping":
-        return "bg-cyan-100 text-cyan-700";
-      case "Delivered":
-        return "bg-green-100 text-green-700";
-      case "Canceled":
-        return "bg-red-100 text-red-700";
-      case "Returned":
-        return "bg-orange-100 text-orange-700";
+      case 'Pending':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'Confirmed':
+        return 'bg-blue-100 text-blue-700';
+      case 'Shipping':
+        return 'bg-cyan-100 text-cyan-700';
+      case 'Delivered':
+        return 'bg-green-100 text-green-700';
+      case 'Canceled':
+        return 'bg-red-100 text-red-700';
+      case 'Returned':
+        return 'bg-orange-100 text-orange-700';
       default:
-        return "bg-gray-100 text-gray-700";
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -296,7 +293,7 @@ export function UserDetail() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {userStatus === "active" ? (
+                {userStatus === 'active' ? (
                   <Button
                     variant="destructive"
                     className="w-full"
@@ -312,7 +309,7 @@ export function UserDetail() {
                     Unban User
                   </Button>
                 )}
-                {userProfile?.account?.role === "Buyer" ? (
+                {userProfile?.account?.role === 'Buyer' ? (
                   <Button
                     variant="outline"
                     className="w-full"
@@ -321,7 +318,7 @@ export function UserDetail() {
                     <ShoppingCart className="w-4 h-4 mr-2" />
                     View Orders
                   </Button>
-                ) : userProfile?.account?.role === "Farmer" ? (
+                ) : userProfile?.account?.role === 'Farmer' ? (
                   <Button
                     variant="outline"
                     className="w-full"
@@ -335,7 +332,7 @@ export function UserDetail() {
                     variant="outline"
                     className="w-full"
                     onClick={() => {
-                      toast.info("Feature coming soon");
+                      toast.info('Feature coming soon');
                     }}
                   >
                     <Lock className="w-4 h-4 mr-2" />
@@ -375,7 +372,7 @@ export function UserDetail() {
               variant="outline"
               onClick={() => {
                 setShowBanModal(false);
-                setBanReason("");
+                setBanReason('');
               }}
             >
               Cancel
@@ -430,8 +427,8 @@ export function UserDetail() {
               {selectedOrder ? (
                 // Order Details View
                 <div className="space-y-4">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => setSelectedOrder(null)}
                   >
@@ -441,7 +438,11 @@ export function UserDetail() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle>{selectedOrder.orderCode}</CardTitle>
-                        <Badge className={getOrderStatusColor(selectedOrder.orderStatus)}>
+                        <Badge
+                          className={getOrderStatusColor(
+                            selectedOrder.orderStatus
+                          )}
+                        >
                           {selectedOrder.orderStatus}
                         </Badge>
                       </div>
@@ -449,64 +450,112 @@ export function UserDetail() {
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <p className="text-xs text-muted-foreground">Order Date</p>
+                          <p className="text-xs text-muted-foreground">
+                            Order Date
+                          </p>
                           <p className="text-sm font-medium">
-                            {new Date(selectedOrder.orderDate).toLocaleString()}
+                            {formatUtcDateTime(selectedOrder.orderDate)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Total Price</p>
+                          <p className="text-xs text-muted-foreground">
+                            Total Price
+                          </p>
                           <p className="text-sm font-medium text-green-600">
                             ₫{selectedOrder.totalPrice?.toLocaleString('vi-VN')}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Payment Status</p>
-                          <Badge variant={selectedOrder.paymentStatus === "Paid" ? "default" : "secondary"}>
+                          <p className="text-xs text-muted-foreground">
+                            Payment Status
+                          </p>
+                          <Badge
+                            variant={
+                              selectedOrder.paymentStatus === 'Paid'
+                                ? 'default'
+                                : 'secondary'
+                            }
+                          >
                             {selectedOrder.paymentStatus}
                           </Badge>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Payment Method</p>
-                          <p className="text-sm font-medium">{selectedOrder.paymentMethod}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Payment Method
+                          </p>
+                          <p className="text-sm font-medium">
+                            {selectedOrder.paymentMethod}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Shipping Fee</p>
-                          <p className="text-sm font-medium">₫{selectedOrder.shippingFee?.toLocaleString('vi-VN')}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Shipping Fee
+                          </p>
+                          <p className="text-sm font-medium">
+                            ₫
+                            {selectedOrder.shippingFee?.toLocaleString('vi-VN')}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Order Type</p>
-                          <p className="text-sm font-medium">{selectedOrder.orderType}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Order Type
+                          </p>
+                          <p className="text-sm font-medium">
+                            {selectedOrder.orderType}
+                          </p>
                         </div>
                       </div>
 
                       {selectedOrder.address && (
                         <div className="border-t pt-4">
-                          <p className="text-xs text-muted-foreground mb-2">Shipping Address</p>
+                          <p className="text-xs text-muted-foreground mb-2">
+                            Shipping Address
+                          </p>
                           <p className="text-sm">
-                            {selectedOrder.address.detail}, {selectedOrder.address.ward || ""} {selectedOrder.address.district || ""}, {selectedOrder.address.province}
+                            {selectedOrder.address.detail},{' '}
+                            {selectedOrder.address.ward || ''}{' '}
+                            {selectedOrder.address.district || ''},{' '}
+                            {selectedOrder.address.province}
                           </p>
                         </div>
                       )}
 
-                      {selectedOrder.orderItems && selectedOrder.orderItems.length > 0 && (
-                        <div className="border-t pt-4">
-                          <p className="text-xs text-muted-foreground mb-2">Order Items</p>
-                          <div className="space-y-2">
-                            {selectedOrder.orderItems.map((item: any, idx: number) => (
-                              <div key={idx} className="flex justify-between text-sm border-l-2 border-blue-200 pl-3">
-                                <span>Qty: {item.quantity}</span>
-                                <span>Unit: ₫{item.unitPrice?.toLocaleString('vi-VN')}</span>
-                                <span className="font-medium">Subtotal: ₫{item.subTotal?.toLocaleString('vi-VN')}</span>
-                              </div>
-                            ))}
+                      {selectedOrder.orderItems &&
+                        selectedOrder.orderItems.length > 0 && (
+                          <div className="border-t pt-4">
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Order Items
+                            </p>
+                            <div className="space-y-2">
+                              {selectedOrder.orderItems.map(
+                                (item: any, idx: number) => (
+                                  <div
+                                    key={idx}
+                                    className="flex justify-between text-sm border-l-2 border-blue-200 pl-3"
+                                  >
+                                    <span>Qty: {item.quantity}</span>
+                                    <span>
+                                      Unit: ₫
+                                      {item.unitPrice?.toLocaleString('vi-VN')}
+                                    </span>
+                                    <span className="font-medium">
+                                      Subtotal: ₫
+                                      {item.subTotal?.toLocaleString('vi-VN')}
+                                    </span>
+                                  </div>
+                                )
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
                       <div className="border-t pt-4">
-                        <p className="text-xs text-muted-foreground mb-2">Created</p>
-                        <p className="text-sm">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Created
+                        </p>
+                        <p className="text-sm">
+                          {formatUtcDateTime(selectedOrder.createdAt)}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -515,17 +564,19 @@ export function UserDetail() {
                 // Orders List View
                 <div className="space-y-2">
                   {ordersData.map((order: any) => (
-                    <Card 
-                      key={order.id} 
+                    <Card
+                      key={order.id}
                       className="cursor-pointer hover:bg-gray-50 transition-colors"
                       onClick={() => setSelectedOrder(order)}
                     >
                       <CardContent className="pt-4">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
-                            <p className="font-medium text-sm">{order.orderCode}</p>
+                            <p className="font-medium text-sm">
+                              {order.orderCode}
+                            </p>
                             <p className="text-xs text-muted-foreground">
-                              {new Date(order.orderDate).toLocaleString('vi-VN')}
+                              {formatUtcDateTime(order.orderDate)}
                             </p>
                           </div>
                           <div className="text-right">
@@ -533,10 +584,20 @@ export function UserDetail() {
                               ₫{order.totalPrice?.toLocaleString('vi-VN')}
                             </p>
                             <div className="flex gap-2 justify-end mt-1">
-                              <Badge className={getOrderStatusColor(order.orderStatus)}>
+                              <Badge
+                                className={getOrderStatusColor(
+                                  order.orderStatus
+                                )}
+                              >
                                 {order.orderStatus}
                               </Badge>
-                              <Badge variant={order.paymentStatus === "Paid" ? "default" : "secondary"}>
+                              <Badge
+                                variant={
+                                  order.paymentStatus === 'Paid'
+                                    ? 'default'
+                                    : 'secondary'
+                                }
+                              >
                                 {order.paymentStatus}
                               </Badge>
                             </div>
@@ -554,10 +615,13 @@ export function UserDetail() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowOrdersModal(false);
-              setSelectedOrder(null);
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowOrdersModal(false);
+                setSelectedOrder(null);
+              }}
+            >
               Close
             </Button>
           </DialogFooter>
@@ -579,19 +643,29 @@ export function UserDetail() {
               <div className="grid grid-cols-2 gap-4 py-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Farm Name</p>
-                  <p className="text-sm font-medium">{farmData.farmName || "N/A"}</p>
+                  <p className="text-sm font-medium">
+                    {farmData.farmName || 'N/A'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Phone</p>
-                  <p className="text-sm font-medium">{farmData.phone || "N/A"}</p>
+                  <p className="text-sm font-medium">
+                    {farmData.phone || 'N/A'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Area</p>
-                  <p className="text-sm font-medium">{farmData.area || "N/A"}</p>
+                  <p className="text-sm font-medium">
+                    {farmData.area || 'N/A'} m<sup>2</sup>
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Batch Code Prefix</p>
-                  <p className="text-sm font-medium">{farmData.batchCodePrefix || "N/A"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Batch Code Prefix
+                  </p>
+                  <p className="text-sm font-medium">
+                    {farmData.batchCodePrefix || 'N/A'}
+                  </p>
                 </div>
               </div>
               {farmData.farmDesc && (
@@ -604,22 +678,34 @@ export function UserDetail() {
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">Address</p>
                   <p className="text-sm">
-                    {farmData.address.detail}, {farmData.address.ward}, {farmData.address.district}, {farmData.address.province}
+                    {farmData.address.detail}, {farmData.address.ward},{' '}
+                    {farmData.address.district}, {farmData.address.province}
                   </p>
                 </div>
               )}
               {farmData.seasons && farmData.seasons.length > 0 && (
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2">Seasons ({farmData.seasons.length})</p>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Seasons ({farmData.seasons.length})
+                  </p>
                   <div className="space-y-2">
-                    {farmData.seasons.slice(0, 3).map((season: any, idx: number) => (
-                      <div key={idx} className="text-sm border-l-2 border-blue-200 pl-3">
-                        <p className="font-medium">{season.seasonName}</p>
-                        <p className="text-xs text-muted-foreground">{season.seasonDesc}</p>
-                      </div>
-                    ))}
+                    {farmData.seasons
+                      .slice(0, 3)
+                      .map((season: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="text-sm border-l-2 border-blue-200 pl-3"
+                        >
+                          <p className="font-medium">{season.seasonName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {season.seasonDesc}
+                          </p>
+                        </div>
+                      ))}
                     {farmData.seasons.length > 3 && (
-                      <p className="text-xs text-muted-foreground">+{farmData.seasons.length - 3} more seasons</p>
+                      <p className="text-xs text-muted-foreground">
+                        +{farmData.seasons.length - 3} more seasons
+                      </p>
                     )}
                   </div>
                 </div>
@@ -637,6 +723,6 @@ export function UserDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </>
-      );
-      }
+    </>
+  );
+}

@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, MapPin, Calendar, ShoppingCart, FileText, Leaf, TrendingUp } from 'lucide-react';
+import {
+  ArrowLeft,
+  Package,
+  MapPin,
+  Calendar,
+  ShoppingCart,
+  FileText,
+  Leaf,
+  TrendingUp,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
@@ -18,6 +27,7 @@ import { getProductBatchDetail } from '../../farmer/ProductBatchDetail/api';
 import { getAddressesMe, type AddressItem } from '../Addresses/api';
 import { createPreOrder } from './api';
 import type { ProductBatchDetail } from '../../farmer/ProductBatchDetail/types';
+import { formatUtcDate } from '../../../utils/timeUtils';
 
 export function PreOrderPage() {
   const { batchId } = useParams<{ batchId: string }>();
@@ -144,9 +154,9 @@ export function PreOrderPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
         <div className="container mx-auto px-4 py-8">
-          <Button 
-            variant="ghost" 
-            onClick={handleBack} 
+          <Button
+            variant="ghost"
+            onClick={handleBack}
             className="mb-6 hover:bg-white/50 transition-all"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -155,7 +165,9 @@ export function PreOrderPage() {
           <div className="flex items-center justify-center h-96">
             <div className="text-center space-y-4">
               <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-muted-foreground text-lg">Loading batch details...</p>
+              <p className="text-muted-foreground text-lg">
+                Loading batch details...
+              </p>
             </div>
           </div>
         </div>
@@ -167,9 +179,9 @@ export function PreOrderPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
         <div className="container mx-auto px-4 py-8">
-          <Button 
-            variant="ghost" 
-            onClick={handleBack} 
+          <Button
+            variant="ghost"
+            onClick={handleBack}
             className="mb-6 hover:bg-white/50 transition-all"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -180,8 +192,12 @@ export function PreOrderPage() {
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Package className="h-8 w-8 text-red-600" />
               </div>
-              <p className="text-red-600 text-xl font-semibold">Batch not found</p>
-              <p className="text-muted-foreground mt-2">The requested batch could not be loaded</p>
+              <p className="text-red-600 text-xl font-semibold">
+                Batch not found
+              </p>
+              <p className="text-muted-foreground mt-2">
+                The requested batch could not be loaded
+              </p>
             </Card>
           </div>
         </div>
@@ -196,9 +212,9 @@ export function PreOrderPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Button 
-            variant="ghost" 
-            onClick={handleBack} 
+          <Button
+            variant="ghost"
+            onClick={handleBack}
             className="mb-4 hover:bg-white/50 transition-all"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -209,8 +225,12 @@ export function PreOrderPage() {
               <ShoppingCart className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Create Pre-Order</h1>
-              <p className="text-muted-foreground">Secure your fresh produce in advance</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Create Pre-Order
+              </h1>
+              <p className="text-muted-foreground">
+                Secure your fresh produce in advance
+              </p>
             </div>
           </div>
         </div>
@@ -225,18 +245,27 @@ export function PreOrderPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Leaf className="h-5 w-5" />
-                      <span className="text-green-100 text-sm font-medium">Fresh & Organic</span>
+                      <span className="text-green-100 text-sm font-medium">
+                        Fresh & Organic
+                      </span>
                     </div>
                     <h2 className="text-2xl font-bold mb-1">
                       {batch.season?.product?.productName}
                     </h2>
                     <p className="text-green-100 text-sm">
-                      Batch Code: <span className="font-semibold">{batch.batchCode.value}</span>
+                      Batch Code:{' '}
+                      <span className="font-semibold">
+                        {batch.batchCode.value}
+                      </span>
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="text-3xl font-bold">{Number(batch.price).toLocaleString('vi-VN')}₫</div>
-                    <div className="text-green-100 text-sm">per {batch.units}</div>
+                    <div className="text-3xl font-bold">
+                      {Number(batch.price).toLocaleString('vi-VN')}₫
+                    </div>
+                    <div className="text-green-100 text-sm">
+                      per {batch.units}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -245,7 +274,9 @@ export function PreOrderPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-4 bg-green-50 rounded-xl border border-green-100">
                     <Package className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                    <p className="text-xs text-muted-foreground mb-1">Available</p>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Available
+                    </p>
                     <p className="text-lg font-bold text-gray-900">
                       {batch.availableQuantity}
                     </p>
@@ -253,19 +284,25 @@ export function PreOrderPage() {
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
                     <Calendar className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                    <p className="text-xs text-muted-foreground mb-1">Harvest Date</p>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Harvest Date
+                    </p>
                     <p className="text-sm font-bold text-gray-900">
-                      {new Date(batch.harvestDate).toLocaleDateString('vi-VN')}
+                      {formatUtcDate(batch.harvestDate)}
                     </p>
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-xl border border-purple-100">
                     <TrendingUp className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-                    <p className="text-xs text-muted-foreground mb-1">Quality</p>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Quality
+                    </p>
                     <p className="text-sm font-bold text-gray-900">Premium</p>
                   </div>
                   <div className="text-center p-4 bg-orange-50 rounded-xl border border-orange-100">
                     <Leaf className="h-6 w-6 text-orange-600 mx-auto mb-2" />
-                    <p className="text-xs text-muted-foreground mb-1">Organic</p>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Organic
+                    </p>
                     <p className="text-sm font-bold text-gray-900">Certified</p>
                   </div>
                 </div>
@@ -278,14 +315,19 @@ export function PreOrderPage() {
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                   <FileText className="h-5 w-5 text-blue-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Order Details</h3>
+                <h3 className="text-xl font-bold text-gray-900">
+                  Order Details
+                </h3>
               </div>
 
               <form onSubmit={handleSubmit}>
                 <div className="space-y-6">
                   {/* Delivery Address */}
                   <div className="space-y-3">
-                    <Label htmlFor="address" className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                    <Label
+                      htmlFor="address"
+                      className="flex items-center gap-2 text-base font-semibold text-gray-900"
+                    >
                       <MapPin className="h-4 w-4 text-green-600" />
                       Delivery Address *
                     </Label>
@@ -293,13 +335,21 @@ export function PreOrderPage() {
                       value={selectedAddressId}
                       onValueChange={setSelectedAddressId}
                     >
-                      <SelectTrigger id="address" className="h-12 text-base border-2 focus:border-green-500">
+                      <SelectTrigger
+                        id="address"
+                        className="h-12 text-base border-2 focus:border-green-500"
+                      >
                         <SelectValue placeholder="Select a delivery address" />
                       </SelectTrigger>
                       <SelectContent>
                         {addresses.map((address) => (
-                          <SelectItem key={address.id} value={address.id} className="text-base py-3">
-                            {address.province}, {address.district}, {address.ward}
+                          <SelectItem
+                            key={address.id}
+                            value={address.id}
+                            className="text-base py-3"
+                          >
+                            {address.province}, {address.district},{' '}
+                            {address.ward}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -319,14 +369,31 @@ export function PreOrderPage() {
                               <MapPin className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
                               <div>
                                 <p className="font-bold text-gray-900">
-                                  {addresses.find((a) => a.id === selectedAddressId)?.province}
+                                  {
+                                    addresses.find(
+                                      (a) => a.id === selectedAddressId
+                                    )?.province
+                                  }
                                 </p>
                                 <p className="text-sm text-gray-700">
-                                  {addresses.find((a) => a.id === selectedAddressId)?.ward},{' '}
-                                  {addresses.find((a) => a.id === selectedAddressId)?.district}
+                                  {
+                                    addresses.find(
+                                      (a) => a.id === selectedAddressId
+                                    )?.ward
+                                  }
+                                  ,{' '}
+                                  {
+                                    addresses.find(
+                                      (a) => a.id === selectedAddressId
+                                    )?.district
+                                  }
                                 </p>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                  {addresses.find((a) => a.id === selectedAddressId)?.detail}
+                                  {
+                                    addresses.find(
+                                      (a) => a.id === selectedAddressId
+                                    )?.detail
+                                  }
                                 </p>
                               </div>
                             </div>
@@ -363,7 +430,11 @@ export function PreOrderPage() {
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <p className="text-muted-foreground">
-                        Max available: <span className="font-semibold text-gray-900">{batch.availableQuantity}</span> {batch.units}
+                        Max available:{' '}
+                        <span className="font-semibold text-gray-900">
+                          {batch.availableQuantity}
+                        </span>{' '}
+                        {batch.units}
                       </p>
                       {quantity > 0 && (
                         <p className="text-green-600 font-semibold">
@@ -375,7 +446,10 @@ export function PreOrderPage() {
 
                   {/* Note Input */}
                   <div className="space-y-3">
-                    <Label htmlFor="note" className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                    <Label
+                      htmlFor="note"
+                      className="flex items-center gap-2 text-base font-semibold text-gray-900"
+                    >
                       <FileText className="h-4 w-4 text-green-600" />
                       Special Notes (Optional)
                     </Label>
@@ -402,7 +476,9 @@ export function PreOrderPage() {
                     </Button>
                     <Button
                       type="submit"
-                      disabled={isSubmitting || !selectedAddressId || quantity <= 0}
+                      disabled={
+                        isSubmitting || !selectedAddressId || quantity <= 0
+                      }
                       className="flex-1 h-14 text-base bg-green-600 hover:bg-green-400 shadow-lg hover:shadow-xl "
                     >
                       {isSubmitting ? (
@@ -436,7 +512,9 @@ export function PreOrderPage() {
               <div className="space-y-4">
                 <div className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Quantity:</span>
+                    <span className="text-sm text-muted-foreground">
+                      Quantity:
+                    </span>
                     <span className="font-semibold text-gray-900">
                       {quantity > 0 ? quantity : 0} {batch.units}
                     </span>
@@ -447,7 +525,9 @@ export function PreOrderPage() {
                 {/* Info Alert */}
                 <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
                   <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs">ℹ</div>
+                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs">
+                      ℹ
+                    </div>
                     Pre-Order Information
                   </h4>
                   <ul className="text-sm text-blue-800 space-y-2">
@@ -481,17 +561,29 @@ export function PreOrderPage() {
                   <div className="p-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-xl border border-green-100">
                     <div className="space-y-3">
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Farm Name</p>
-                        <p className="font-bold text-lg text-gray-900">{batch.season.farm.farmName}</p>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Farm Name
+                        </p>
+                        <p className="font-bold text-lg text-gray-900">
+                          {batch.season.farm.farmName}
+                        </p>
                       </div>
                       <div className="h-px bg-gray-200" />
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Area</p>
-                        <p className="font-semibold text-gray-900">{batch.season.farm.area}</p>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Area
+                        </p>
+                        <p className="font-semibold text-gray-900">
+                          {batch.season.farm.area} m<sup>2</sup>
+                        </p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Contact</p>
-                        <p className="font-semibold text-gray-900">{batch.season.farm.phone}</p>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Contact
+                        </p>
+                        <p className="font-semibold text-gray-900">
+                          {batch.season.farm.phone}
+                        </p>
                       </div>
                     </div>
                   </div>

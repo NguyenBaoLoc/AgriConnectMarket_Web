@@ -1,4 +1,4 @@
-const BASE_URL = 'http://192.168.2.67:5170/api';
+const BASE_URL = 'http://localhost:5170/api';
 
 export const API = {
   base: BASE_URL,
@@ -57,6 +57,8 @@ export const API = {
     update: (seasonId: string) => `${BASE_URL}/seasons/${seasonId}`,
     delete: (seasonId: string) => `${BASE_URL}/seasons/${seasonId}`,
     patch: (seasonId: string) => `${BASE_URL}/seasons/${seasonId}`,
+    updateStatus: (seasonId: string) =>
+      `${BASE_URL}/seasons/${seasonId}/status`,
   },
   productBatch: {
     list: `${BASE_URL}/product-batches`,
@@ -121,5 +123,11 @@ export const API = {
     create: `${BASE_URL}/event-types`,
     detail: (id: string) => `${BASE_URL}/event-types/${id}`,
     delete: (id: string) => `${BASE_URL}/event-types/${id}`,
+  },
+  transaction: {
+    list: `${BASE_URL}/transactions`,
+    get: (transactionId: string) => `${BASE_URL}/transactions/${transactionId}`,
+    resolve: (transactionId: string) =>
+      `${BASE_URL}/transactions/${transactionId}/resolve`,
   },
 };

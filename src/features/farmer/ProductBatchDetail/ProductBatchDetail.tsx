@@ -4,11 +4,20 @@ import {
   Plus,
   Leaf,
   ShoppingCart,
+  ZoomIn,
+  MapPin,
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { formatUtcDate } from '../../../utils/timeUtils';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../../../components/ui/dialog';
 import { toast } from 'sonner';
 import type { ProductBatchDetail } from './types';
 import { getProductBatchDetail } from './api';
@@ -28,6 +37,7 @@ export function ProductBatchDetail() {
   const [eventRefreshTrigger, setEventRefreshTrigger] = useState(0);
   const [harvestDialogOpen, setHarvestDialogOpen] = useState(false);
   const [sellDialogOpen, setSellDialogOpen] = useState(false);
+  const [qrZoomOpen, setQrZoomOpen] = useState(false);
 
   useEffect(() => {
     const fetchBatchDetail = async () => {
@@ -200,7 +210,7 @@ export function ProductBatchDetail() {
                   Planting Date
                 </p>
                 <p className="text-gray-900">
-                  {new Date(batch.plantingDate).toLocaleDateString('vi-VN')}
+                  {formatUtcDate(batch.plantingDate)}
                 </p>
               </div>
 
@@ -209,11 +219,38 @@ export function ProductBatchDetail() {
                   Harvest Date
                 </p>
                 <p className="text-gray-900">
-                  {new Date(batch.harvestDate).toLocaleDateString('vi-VN')}
+                  {formatUtcDate(batch.harvestDate)}
                 </p>
               </div>
             </div>
           </Card>
+
+          {/* Verification QR Code */}
+          {batch.verificationQr && (
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Verification QR Code
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setQrZoomOpen(true)}
+                  title="View Full Size"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="w-full flex justify-center bg-gray-50 rounded-lg p-4">
+                <img
+                  src={batch.verificationQr}
+                  alt="Verification QR Code"
+                  className="w-64 h-64 object-contain cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setQrZoomOpen(true)}
+                />
+              </div>
+            </Card>
+          )}
         </div>
 
         {/* Right: Related Information */}
@@ -248,18 +285,12 @@ export function ProductBatchDetail() {
 
                 <div>
                   <p className="text-sm text-muted-foreground">Start Date</p>
-                  <p>
-                    {new Date(batch.season.startDate).toLocaleDateString(
-                      'vi-VN'
-                    )}
-                  </p>
+                  <p>{formatUtcDate(batch.season.startDate)}</p>
                 </div>
 
                 <div>
                   <p className="text-sm text-muted-foreground">End Date</p>
-                  <p>
-                    {new Date(batch.season.endDate).toLocaleDateString('vi-VN')}
-                  </p>
+                  <p>{formatUtcDate(batch.season.endDate)}</p>
                 </div>
 
                 <div>
@@ -286,7 +317,9 @@ export function ProductBatchDetail() {
 
                 <div>
                   <p className="text-sm text-muted-foreground">Area</p>
-                  <p>{batch.season.farm.area}</p>
+                  <p>
+                    {batch.season.farm.area} m<sup>2</sup>
+                  </p>
                 </div>
 
                 <div>
@@ -308,6 +341,57 @@ export function ProductBatchDetail() {
                       ? 'Active'
                       : 'Inactive'}
                   </Badge>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Farm Address */}
+          {batch.season?.farm?.address && (
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <MapPin className="w-5 h-5 text-gray-900" />
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Farm Location
+                </h3>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">Province</p>
+                  <p className="font-semibold">
+                    {batch.season.farm.address.province}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">District</p>
+                  <p className="text-sm">
+                    {batch.season.farm.address.district}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">Ward</p>
+                  <p className="text-sm">{batch.season.farm.address.ward}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Address Details
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    {batch.season.farm.address.detail}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">Full Address</p>
+                  <p className="text-sm font-medium text-gray-900 mt-1">
+                    {batch.season.farm.address.detail},{' '}
+                    {batch.season.farm.address.ward},{' '}
+                    {batch.season.farm.address.district},{' '}
+                    {batch.season.farm.address.province}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -385,6 +469,24 @@ export function ProductBatchDetail() {
           currentPrice={batch.price}
           onSuccess={handleBatchUpdated}
         />
+      )}
+
+      {/* QR Code Zoom Dialog */}
+      {batch?.verificationQr && (
+        <Dialog open={qrZoomOpen} onOpenChange={setQrZoomOpen} modal={true}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Verification QR Code</DialogTitle>
+            </DialogHeader>
+            <div className="bg-gray-50 rounded-lg overflow-auto p-6 flex justify-center">
+              <img
+                src={batch.verificationQr}
+                alt="Verification QR Code - Full Size"
+                className="w-full max-w-md h-auto object-contain"
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

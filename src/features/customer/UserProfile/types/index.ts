@@ -1,6 +1,6 @@
-import type { ApiResponse } from "../../../../types";
+import type { ApiResponse } from '../../../../types';
 
-type Status = "Processing" | "In Transit" | "Delivered" | "Cancelled";
+type Status = 'Processing' | 'Shipping' | 'Delivered' | 'Cancelled';
 interface UserInfo {
   accountId: string;
   avartarUrl: string;
