@@ -6,6 +6,7 @@ import {
   LogOut,
   Heart,
   LogIn,
+  Bell,
 } from 'lucide-react';
 import { Input } from '../../../components/ui/input';
 import { NavigationButton } from './Header/components/NavigationButton';
@@ -13,15 +14,15 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getCartItems } from '../CartPage/api';
 import { removeCredentials } from '../../../utils/credentialsSettings';
+import { getMyNotifications } from '../NotificationPage/api';
+import { useNotification } from '../../../components/NotificationContext';
 export { Footer } from './Footer/Footer';
 
 interface HeaderProps {
-  notificationCount: number;
   cartItemsCount?: number;
 }
 
 export function Header({
-  notificationCount = 0,
   cartItemsCount = 0,
 }: HeaderProps) {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export function Header({
   const isLoggedIn = Boolean(localStorage.getItem('token'));
   const [cartCount, setCartCount] = useState(cartItemsCount);
   const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
+  const { count, setCount } = useNotification();
 
   useEffect(() => {
     const fetchCartCount = async () => {
@@ -49,6 +51,22 @@ export function Header({
         console.error('Failed to fetch cart count:', error);
       }
     };
+    const fetchNotificationCount = async () => {
+      if (!isLoggedIn) {
+        setCount(0);
+        return;
+      }
+      try {
+        const response = await getMyNotifications();
+        if (response) {
+          const unreadCount = response.filter(n => n.isRead === false).length;
+          setCount(unreadCount);
+        }
+      } catch (error) {
+        console.error('Failed to fetch notification count:', error);
+      }
+    };
+    fetchNotificationCount();
     fetchCartCount();
   }, [isLoggedIn]);
 
@@ -73,6 +91,9 @@ export function Header({
   }
   function onNavigateToProfile() {
     navigate('/profile');
+  }
+  function onNavigateToNotification() {
+    navigate('/notifications');
   }
   function onNavigateToFavorites() {
     navigate('/favorites');
@@ -136,7 +157,12 @@ export function Header({
           {isLoggedIn ? (
             <>
               <NavigationButton icon={User} onClick={onNavigateToProfile} />
-
+              <NavigationButton
+                icon={Bell}
+                onClick={onNavigateToNotification}
+                count={count}
+                badgeColor="green"
+              />
               <NavigationButton icon={Heart} onClick={onNavigateToFavorites} />
               <NavigationButton
                 icon={ShoppingCart}

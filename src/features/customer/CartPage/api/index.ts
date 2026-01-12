@@ -1,5 +1,9 @@
 import axios from 'axios';
-import type { GetCartItemResponse, UpdateDeleteCartResponse } from '../types';
+import type {
+  AddressListResponse,
+  GetCartItemResponse,
+  UpdateDeleteCartResponse,
+} from '../types';
 import { API } from '../../../../api';
 
 export interface AddToCartRequest {
@@ -141,6 +145,29 @@ export async function deleteAllCart(
       'data' in error.response
     ) {
       return (error.response as { data: UpdateDeleteCartResponse }).data;
+    }
+    throw error;
+  }
+}
+
+export async function getFarmAddressList(): Promise<AddressListResponse> {
+  try {
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const response = await axios.get<AddressListResponse>(API.address.farm, {
+      headers,
+    });
+    return response.data;
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      'data' in error.response
+    ) {
+      return (error.response as { data: AddressListResponse }).data;
     }
     throw error;
   }

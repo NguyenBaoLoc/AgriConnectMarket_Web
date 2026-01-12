@@ -12,7 +12,7 @@ import {
 import { Footer } from '../components';
 import { formatVND } from '../../../components/ui/utils';
 import type { CartData } from './types';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
@@ -20,8 +20,12 @@ import {
   updateCartItemQuantity,
   removeCartItem,
   deleteAllCart,
+  getFarmAddressList,
 } from './api';
 import type { UpdateCartItemRequest } from './api';
+import type { Farm } from '../../admin/FarmList/types/index.ts';
+import { getFarmList } from '../../admin/FarmList/api';
+import { getAddressesMe, type AddressItem } from '../Addresses/api';
 
 interface CartPageProps {
   onNavigateHome: () => void;
@@ -41,13 +45,18 @@ export function CartPage({
     setHeaderCartCount?: (count: number) => void;
   }>();
   const [cartData, setCartData] = useState<CartData | null>(null);
+  const [farms, setFarms] = useState<Farm[]>([]);
+  const [addresses, setAddresses] = useState<AddressItem[]>([]);
+  const [myAddress, setMyAddress] = useState<AddressItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [deletingAll, setDeletingAll] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const farOrderWarningMessage =
+    'Notice: Agricultural products are sensitive to transportation distance and may spoil more easily. Since this order comes from a different province or district, we recommend contacting the farmer to confirm delivery conditions before continuing.';
 
-  // ❗ TEMP INPUTS for quantity — THIS is what caused your bug
+
   const [quantityInputs, setQuantityInputs] = useState<Record<string, number>>(
     {}
   );
@@ -125,8 +134,67 @@ export function CartPage({
     navigate(`/product/${batchId}`);
   };
 
+  const farmMap = useMemo(() => {
+    return new Map(farms.map(f => [f.id, f]));
+  }, [farms]);
+
+  const addressMap = useMemo(() => {
+    return new Map(addresses.map(a => [a.id, a]));
+  }, [addresses]);
+
+  // const farmProvincesInCart = useMemo(() => {
+  //   if (!cartData || !farms.length || !addresses.length) return [];
+
+  //   const provinces = new Set<string>();
+
+  //   for (const farmGroup of cartData.cartItems) {
+  //     const farm = farmMap.get(farmGroup.farmId);
+  //     if (!farm) continue;
+
+  //     const address = addressMap.get(farm.addressId);
+  //     if (!address?.province) continue;
+
+  //     provinces.add(address.province);
+  //   }
+
+  //   return Array.from(provinces);
+  // }, [cartData, farmMap, addressMap]);
+
+
+  // const hasDifferentProvinceFarm =
+  //   myAddress?.province &&
+  //   [...farmProvincesInCart].some(p => p !== myAddress.province);
+
+  const hasDifferentLocationFarm = useMemo(() => {
+    if (!cartData || !myAddress) return false;
+
+    for (const farmGroup of cartData.cartItems) {
+      const farm = farmMap.get(farmGroup.farmId);
+      if (!farm) continue;
+
+      const address = addressMap.get(farm.addressId);
+      if (!address) continue;
+
+      if (
+        address.province !== myAddress.province ||
+        address.district !== myAddress.district
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }, [cartData, myAddress, farmMap, addressMap]);
+
   const handleProceedToCheckout = () => {
     // Pass selected items info to checkout page
+    if (hasDifferentLocationFarm) {
+      const confirmed = window.confirm(
+        farOrderWarningMessage
+      );
+
+      if (!confirmed) return;
+    }
     navigate('/checkout', {
       state: {
         selectedItemIds: Array.from(selectedItems),
@@ -207,7 +275,7 @@ export function CartPage({
           // FIX: clear stale inputs
           clearQuantityInputs();
         }
-      } catch (e) {}
+      } catch (e) { }
     } finally {
       setUpdatingItems((prev) => {
         const s = new Set(prev);
@@ -283,6 +351,47 @@ export function CartPage({
 
   // INITIAL FETCH — FIX HERE
   useEffect(() => {
+    const fetchFarmAddresses = async () => {
+      try {
+        const response = await getFarmAddressList();
+        if (response.success && response.data) {
+          setAddresses(response.data);
+        }
+      } catch (err) {
+        console.error('Error fetching addresses:', err);
+      }
+    };
+    const fetchCustomerAddress = async () => {
+      try {
+        const response = await getAddressesMe();
+        if (response.success && response.data.length > 0) {
+          const primaryAddress = response.data.find(addr => addr.isDefault) || response.data[0];
+          setMyAddress(primaryAddress);
+        }
+      } catch (err) {
+        console.error('Error fetching addresses:', err);
+      }
+    };
+    const fetchFarms = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await getFarmList();
+        if (response.success && response.data) {
+          setFarms(response.data);
+        } else {
+          setError(response.message || 'Failed to fetch farm');
+          toast.error(response.message || 'Failed to fetch farms');
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'An error occurred';
+        setError(msg);
+        toast.error('Failed to load farms');
+      } finally {
+        setLoading(false);
+      }
+    };
     const fetchCart = async () => {
       try {
         setLoading(true);
@@ -306,6 +415,9 @@ export function CartPage({
         setLoading(false);
       }
     };
+    fetchFarmAddresses();
+    fetchCustomerAddress();
+    fetchFarms();
     fetchCart();
   }, []);
 
@@ -396,11 +508,10 @@ export function CartPage({
                           {farm.items?.map((item) => (
                             <div
                               key={item.itemId}
-                              className={`flex gap-4 pb-3 border-b border-gray-100 items-start transition-colors ${
-                                selectedItems.has(item.itemId)
-                                  ? 'bg-green-50 p-2 rounded'
-                                  : ''
-                              }`}
+                              className={`flex gap-4 pb-3 border-b border-gray-100 items-start transition-colors ${selectedItems.has(item.itemId)
+                                ? 'bg-green-50 p-2 rounded'
+                                : ''
+                                }`}
                             >
                               {/* Checkbox */}
                               <input
