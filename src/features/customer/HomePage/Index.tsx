@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Hero } from "./components/Hero";
-import { Features } from "./components/Features";
-import { FeaturedFarms } from "./components/FeaturedFarms";
-import { CategorySection } from "./components/CategorySection";
-import { fetchFarms } from "./api";
-import { Footer } from "../components";
-import type { Farm } from "../../../types";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Hero } from './components/Hero';
+import { Features } from './components/Features';
+import { FeaturedFarms } from './components/FeaturedFarms';
+import { RecommendedBatches } from './components/RecommendedBatches';
+import { CategorySection } from './components/CategorySection';
+import { fetchFarms, fetchRecommendedBatches } from './api';
+import { Footer } from '../components';
+import type { Farm } from '../../../types';
+import type { ProductBatch } from '../ProductPage/types';
 
 interface HomePageProps {
   onNavigateToProducts: () => void;
@@ -21,7 +23,11 @@ export function HomePage({
 }: HomePageProps) {
   const navigate = useNavigate();
   const [featuredFarms, setFeaturedFarms] = useState<Farm[]>([]);
+  const [recommendedBatches, setRecommendedBatches] = useState<ProductBatch[]>(
+    []
+  );
   const [isLoadingFarms, setIsLoadingFarms] = useState(true);
+  const [isLoadingBatches, setIsLoadingBatches] = useState(true);
 
   useEffect(() => {
     const loadFarms = async () => {
@@ -33,7 +39,16 @@ export function HomePage({
     loadFarms();
   }, []);
 
-  
+  useEffect(() => {
+    const loadRecommendedBatches = async () => {
+      setIsLoadingBatches(true);
+      const batches = await fetchRecommendedBatches();
+      setRecommendedBatches(batches);
+      setIsLoadingBatches(false);
+    };
+    loadRecommendedBatches();
+  }, []);
+
   return (
     <div>
       <Hero onNavigateToProducts={onNavigateToProducts} />
@@ -41,10 +56,19 @@ export function HomePage({
 
       {/* Featured Farms Section */}
       {!isLoadingFarms && featuredFarms.length > 0 && (
-        <FeaturedFarms 
-          farms={featuredFarms} 
+        <FeaturedFarms
+          farms={featuredFarms}
           onNavigateToFarmDetails={onNavigateToFarmDetails}
           onNavigateToAllFarms={() => navigate('/farms')}
+        />
+      )}
+
+      {/* Recommended Active Batches Section */}
+      {!isLoadingBatches && recommendedBatches.length > 0 && (
+        <RecommendedBatches
+          batches={recommendedBatches}
+          onNavigateToProductDetails={onNavigateToProductDetails}
+          onNavigateToAllBatches={() => navigate('/products')}
         />
       )}
 

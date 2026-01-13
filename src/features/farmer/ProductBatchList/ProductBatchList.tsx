@@ -253,8 +253,13 @@ export function ProductBatchList() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {currentBatches.map((batch) => (
-                    <TableRow key={batch.id}>
+                  {currentBatches.map((batch, index) => (
+                    <TableRow
+                      key={batch.id}
+                      className={`${
+                        index % 2 === 0 ? 'bg-white!' : 'bg-green-200!'
+                      } hover:bg-green-400!`}
+                    >
                       <TableCell className="font-semibold">
                         {batch.batchCode.value}
                       </TableCell>

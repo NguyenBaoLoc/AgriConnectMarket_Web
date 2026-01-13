@@ -37,8 +37,8 @@ export const ModeratorLayout = () => {
   };
 
   const navItems = [
-    { id: 'farms' as Tab, label: 'Farm Management', icon: Warehouse },
-    { id: 'reports' as Tab, label: 'Report Management', icon: AlertTriangle },
+    { id: 'farms' as Tab, label: 'Farm Mgmt', icon: Warehouse },
+    { id: 'reports' as Tab, label: 'Report Mgmt', icon: AlertTriangle },
   ];
 
   return (
