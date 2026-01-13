@@ -470,7 +470,11 @@ export function OrderList() {
               setStartDate('');
               setEndDate('');
             }}
-            className={viewPreOrders ? '' : 'bg-blue-600 hover:bg-blue-700'}
+            className={
+              viewPreOrders
+                ? 'text-white'
+                : 'text-white bg-blue-600 hover:bg-blue-700'
+            }
           >
             Orders
           </Button>
@@ -664,7 +668,7 @@ export function OrderList() {
                     Status
                   </TableHead>
                 )}
-                <TableHead className="text-right font-semibold text-gray-700">
+                <TableHead className="text-center font-semibold text-gray-700">
                   Actions
                 </TableHead>
               </TableRow>
@@ -674,7 +678,7 @@ export function OrderList() {
                 <TableRow>
                   <TableCell
                     colSpan={viewPreOrders ? 6 : 8}
-                    className="text-center py-8 text-muted-foreground"
+                    className="text-center py-8 text-muted-foreground bg-green-300!"
                   >
                     Loading {viewPreOrders ? 'pre-orders' : 'orders'}...
                   </TableCell>
@@ -683,7 +687,7 @@ export function OrderList() {
                 <TableRow>
                   <TableCell
                     colSpan={viewPreOrders ? 6 : 8}
-                    className="text-center py-8 text-muted-foreground"
+                    className="text-center py-8 text-muted-foreground bg-green-300!"
                   >
                     No {viewPreOrders ? 'pre-orders' : 'orders'} found
                   </TableCell>
@@ -693,8 +697,8 @@ export function OrderList() {
                   <TableRow
                     key={order.id}
                     className={`border-b transition-colors ${
-                      index % 2 === 0 ? 'bg-white' : 'bg-green-300'
-                    } hover:bg-green-500`}
+                      index % 2 === 0 ? 'bg-white!' : 'bg-green-200!'
+                    } hover:bg-green-300!`}
                   >
                     <TableCell className="font-medium text-gray-900">
                       {order.orderCode}
@@ -737,7 +741,7 @@ export function OrderList() {
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
-                          variant="ghost"
+                          variant="default"
                           size="sm"
                           onClick={() => onViewDetails(order.id)}
                           disabled={
@@ -745,9 +749,8 @@ export function OrderList() {
                             approvingOrderId === order.id
                           }
                           title="View order details"
-                          className="hover:bg-blue-50"
+                          className="bg-cyan-500 hover:bg-cyan-700"
                         >
-                          <Eye className="h-4 w-4 mr-1" />
                           View Detail
                         </Button>
                         {!viewPreOrders && (

@@ -30,7 +30,7 @@ const getStatusColor = (status: Order['orderStatus']) => {
 
 const getPaymentStatusColor = (status: Order['paymentStatus']) => {
   switch (status) {
-    case 'Completed':
+    case 'Paid':
       return 'bg-green-100 text-green-700';
     case 'Pending':
       return 'bg-yellow-100 text-yellow-700';

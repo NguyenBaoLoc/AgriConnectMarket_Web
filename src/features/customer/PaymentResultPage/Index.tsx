@@ -171,13 +171,7 @@ export function PaymentResultPage() {
                     className="p-3 bg-green-50 rounded text-sm space-y-2 border border-green-200"
                   >
                     <div className="font-semibold text-green-700 mb-2">
-                      Order {index + 1}
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-600">Order Code:</span>
-                      <span className="font-mono font-semibold">
-                        {order.orderCode}
-                      </span>
+                      Order {order.orderCode}
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Total Amount:</span>
@@ -186,9 +180,22 @@ export function PaymentResultPage() {
                       </span>
                     </div>
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-600">Status:</span>
+                      <span className="text-gray-600">Order Status:</span>
                       <span className="font-semibold text-blue-600">
                         {order.orderStatus || 'Pending'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Payment Status:</span>
+                      <span className="font-semibold text-blue-600">
+                        {order.paymentStatus || 'Pending'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Farm:</span>
+                      <span className="font-mono font-semibold">
+                        {order?.orderItems[0]?.batch?.season?.farm?.farmName ||
+                          'N/A'}
                       </span>
                     </div>
                   </div>

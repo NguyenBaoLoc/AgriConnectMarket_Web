@@ -6,7 +6,7 @@ type OrderStatus =
   | 'Shipping'
   | 'Delivered'
   | 'Cancelled';
-type PaymentStatus = 'Pending' | 'Completed' | 'Failed' | 'Cancelled';
+type PaymentStatus = 'Pending' | 'Paid' | 'Failed' | 'Cancelled';
 
 interface OrderItem {
   orderId: string;
