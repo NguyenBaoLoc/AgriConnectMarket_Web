@@ -5,21 +5,15 @@ import { toast } from 'sonner';
 import { getCareEvents } from '../api/events';
 import type { CareEvent } from '../types/event';
 import { formatUtcDateTime } from '../../../../utils/timeUtils';
+import {
+  getAmountFieldsForEventType,
+  getUnitForEventType,
+} from '../../../../utils/eventUnitsUtils';
 
 interface EventListProps {
   batchId: string;
   refreshTrigger?: number;
 }
-
-// Map event types to their amount-related fields
-const eventAmountFields: Record<string, string[]> = {
-  'Soil preparation': ['Soil amendment (amount)', 'Fuel consumed'],
-  Irrigation: ['Water volume'],
-  Fertilization: ['Rate'],
-  'Pest and disease control': ['Rate'],
-  Weeding: ['Area treated', 'Labor'],
-  Harvest: ['Quantity'],
-};
 
 // Helper function to parse payload (handles double-encoded JSON with escaped Unicode)
 const parsePayload = (payload: any): Record<string, any> | null => {
@@ -129,13 +123,14 @@ export function EventList({ batchId, refreshTrigger }: EventListProps) {
           {/* Calculate amounts summary */}
           {(() => {
             const amountsSummary = events.reduce((acc, event) => {
-              const amountFields = eventAmountFields[event.eventType];
+              const amountFields = getAmountFieldsForEventType(event.eventType);
               const parsedPayload = parsePayload(event.payload);
+              const unit = getUnitForEventType(event.eventType);
 
-              if (!amountFields || !parsedPayload) return acc;
+              if (!amountFields || amountFields.length === 0 || !parsedPayload)
+                return acc;
 
               let totalAmount = 0;
-              let unit = '';
 
               amountFields.forEach((fieldName) => {
                 const payloadValue = Object.entries(parsedPayload).find(
@@ -148,9 +143,6 @@ export function EventList({ batchId, refreshTrigger }: EventListProps) {
                   const extracted = extractAmount(payloadValue[1]);
                   if (extracted) {
                     totalAmount += extracted.amount;
-                    if (!unit && extracted.unit) {
-                      unit = extracted.unit;
-                    }
                   }
                 }
               });
@@ -165,9 +157,6 @@ export function EventList({ batchId, refreshTrigger }: EventListProps) {
                 }
                 acc[event.eventType].total += totalAmount;
                 acc[event.eventType].eventCount += 1;
-                if (!acc[event.eventType].unit && unit) {
-                  acc[event.eventType].unit = unit;
-                }
               }
 
               return acc;

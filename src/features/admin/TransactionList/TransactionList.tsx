@@ -165,13 +165,19 @@ export function TransactionList() {
     setIsResolvingTransaction(true);
     try {
       const response = await resolveTransaction(transactionToResolve.id);
+      console.log(response);
       if (response.success && response.data) {
         // Update the transaction in the list
-        setTransactions((prevTransactions) =>
-          prevTransactions.map((t) =>
-            t.id === transactionToResolve.id ? response.data : t
-          )
-        );
+        // setTransactions((prevTransactions) =>
+        //   prevTransactions.map((t) =>
+        //     t.id === transactionToResolve.id ? response.data : t
+        //   )
+        // );
+        filteredTransactions.forEach((tx) => {
+          if (tx.id === transactionToResolve.id) {
+            tx.isResolved = true;
+          }
+        });
         toast.success('Transaction resolved successfully!');
         setIsResolveDialogOpen(false);
         setTransactionToResolve(null);

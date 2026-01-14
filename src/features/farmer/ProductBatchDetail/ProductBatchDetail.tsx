@@ -6,6 +6,7 @@ import {
   ShoppingCart,
   ZoomIn,
   MapPin,
+  Ban,
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatUtcDate } from '../../../utils/timeUtils';
@@ -17,10 +18,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '../../../components/ui/dialog';
 import { toast } from 'sonner';
 import type { ProductBatchDetail } from './types';
-import { getProductBatchDetail } from './api';
+import { getProductBatchDetail, stopSellingProductBatch } from './api';
 import { AddEventDialog } from './components/AddEventDialog';
 import { EventList } from './components/EventList';
 import { HarvestDialog } from './components/HarvestDialog';
@@ -38,6 +41,8 @@ export function ProductBatchDetail() {
   const [harvestDialogOpen, setHarvestDialogOpen] = useState(false);
   const [sellDialogOpen, setSellDialogOpen] = useState(false);
   const [qrZoomOpen, setQrZoomOpen] = useState(false);
+  const [stopSellingDialogOpen, setStopSellingDialogOpen] = useState(false);
+  const [isStoppingBatch, setIsStoppingBatch] = useState(false);
 
   useEffect(() => {
     const fetchBatchDetail = async () => {
@@ -83,6 +88,30 @@ export function ProductBatchDetail() {
         }
       };
       fetchBatchDetail();
+    }
+  };
+
+  const handleStopSelling = async () => {
+    if (!batchId) {
+      toast.error('Batch ID not found');
+      return;
+    }
+
+    try {
+      setIsStoppingBatch(true);
+      const response = await stopSellingProductBatch(batchId);
+      if (response.success && response.data) {
+        setBatch(response.data);
+        setStopSellingDialogOpen(false);
+        toast.success('Batch selling stopped successfully');
+      } else {
+        toast.error(response.message || 'Failed to stop batch selling');
+      }
+    } catch (error) {
+      console.error('Error stopping batch selling:', error);
+      toast.error('Error stopping batch selling');
+    } finally {
+      setIsStoppingBatch(false);
     }
   };
 
@@ -140,6 +169,14 @@ export function ProductBatchDetail() {
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
             Sell Batch
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setStopSellingDialogOpen(true)}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+          >
+            <Ban className="h-4 w-4 mr-2" />
+            Stop Selling
           </Button>
           <Button onClick={() => setIsAddEventDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
@@ -488,6 +525,38 @@ export function ProductBatchDetail() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Stop Selling Dialog */}
+      <Dialog
+        open={stopSellingDialogOpen}
+        onOpenChange={setStopSellingDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Stop Selling Batch</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to stop selling this batch? This action will
+              make the batch unavailable for purchase.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setStopSellingDialogOpen(false)}
+              disabled={isStoppingBatch}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleStopSelling}
+              disabled={isStoppingBatch}
+            >
+              {isStoppingBatch ? 'Stopping...' : 'Yes, Stop Selling'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

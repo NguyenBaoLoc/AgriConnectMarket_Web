@@ -72,6 +72,8 @@ export const API = {
     harvest: (batchId: string) =>
       `${BASE_URL}/product-batches/${batchId}/harvest`,
     sell: (batchId: string) => `${BASE_URL}/product-batches/${batchId}/sell`,
+    stopSelling: (batchId: string) =>
+      `${BASE_URL}/product-batches/${batchId}/stop-selling`,
   },
   cart: {
     me: `${BASE_URL}/carts/me`,

@@ -31,7 +31,12 @@ import { Textarea } from '../../../components/ui/textarea';
 import { Label } from '../../../components/ui/label';
 import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getUserProfile, getProfileOrders, getFarmByAccountId } from './api';
+import {
+  getUserProfile,
+  getProfileOrders,
+  getFarmByAccountId,
+  toggleAccountBan,
+} from './api';
 import type { UserProfile } from './types';
 
 export function UserDetail() {
@@ -129,20 +134,50 @@ export function UserDetail() {
       : 'N/A',
   };
 
-  const handleBan = () => {
-    if (!banReason.trim()) {
+  const handleBan = async () => {
+    if (!userProfile?.accountId) {
+      toast.error('Account ID not found');
       return;
     }
-    setUserStatus('banned');
-    setShowBanModal(false);
-    setBanReason('');
-    toast.success('Customer has been banned');
+
+    try {
+      const response = await toggleAccountBan(userProfile.accountId);
+      if (response.success) {
+        setUserStatus('banned');
+        setShowBanModal(false);
+        toast.success('Customer has been banned');
+      } else {
+        toast.error(
+          `Failed to ban customer: ${response.message || 'Unknown error'}`
+        );
+      }
+    } catch (error) {
+      console.error('Error banning customer:', error);
+      toast.error('Failed to ban customer');
+    }
   };
 
-  const handleUnban = () => {
-    setUserStatus('active');
-    setShowUnbanModal(false);
-    toast.success('Customer has been unbanned');
+  const handleUnban = async () => {
+    if (!userProfile?.accountId) {
+      toast.error('Account ID not found');
+      return;
+    }
+
+    try {
+      const response = await toggleAccountBan(userProfile.accountId);
+      if (response.success) {
+        setUserStatus('active');
+        setShowUnbanModal(false);
+        toast.success('Customer has been unbanned');
+      } else {
+        toast.error(
+          `Failed to unban customer: ${response.message || 'Unknown error'}`
+        );
+      }
+    } catch (error) {
+      console.error('Error unbanning customer:', error);
+      toast.error('Failed to unban customer');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -246,12 +281,31 @@ export function UserDetail() {
                     </div>
                   </div>
                 </div>
-                <Badge
-                  variant="secondary"
-                  className={`text-xs px-3 py-1 ${getStatusColor(userStatus)}`}
-                >
-                  {userStatus.toUpperCase()}
-                </Badge>
+                <div className="flex justify-end items-center gap-2">
+                  <Badge
+                    variant="secondary"
+                    className={`text-xs px-3 py-2 ${getStatusColor(
+                      userStatus
+                    )}`}
+                  >
+                    {userStatus.toUpperCase()}
+                  </Badge>
+                  {userStatus === 'active' ? (
+                    <Button
+                      variant="destructive"
+                      onClick={() => setShowBanModal(true)}
+                    >
+                      Ban User
+                    </Button>
+                  ) : (
+                    <Button
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => setShowUnbanModal(true)}
+                    >
+                      Unban User
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -284,7 +338,7 @@ export function UserDetail() {
           </Card>
 
           {/* Actions Card */}
-          <Card className="border-0 shadow-md">
+          {/* <Card className="border-0 shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5" />
@@ -341,7 +395,7 @@ export function UserDetail() {
                 )}
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </div>
 
@@ -355,33 +409,16 @@ export function UserDetail() {
               prevent them from placing new orders.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="ban-reason">Reason for banning (required)</Label>
-              <Textarea
-                id="ban-reason"
-                placeholder="Enter the reason for banning this customer..."
-                value={banReason}
-                onChange={(e) => setBanReason(e.target.value)}
-                rows={4}
-              />
-            </div>
-          </div>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => {
                 setShowBanModal(false);
-                setBanReason('');
               }}
             >
               Cancel
             </Button>
-            <Button
-              className="bg-red-600 hover:bg-red-700"
-              onClick={handleBan}
-              disabled={!banReason.trim()}
-            >
+            <Button className="bg-red-600 hover:bg-red-700" onClick={handleBan}>
               Yes, Ban Customer
             </Button>
           </DialogFooter>

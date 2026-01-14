@@ -1,10 +1,17 @@
-import { ArrowLeft, MapPin, Calendar } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Footer } from '../components';
 import type { CareEvent } from '../ProductDetail/types';
 import { formatUtcDateTime } from '../../../utils/timeUtils';
+import {
+  getAmountFieldsForEventType,
+  getUnitForEventType,
+} from '../../../utils/eventUnitsUtils';
+import { useState, useEffect } from 'react';
+import { getProductBatchDetail } from '../../farmer/ProductBatchDetail/api';
+import type { Farm } from '../../farmer/ProductBatchList/types';
 
 interface TraceabilityViewProps {
   careEvents: CareEvent[];
@@ -17,16 +24,33 @@ export function TraceabilityView({
   onBack,
   errorMessage,
 }: TraceabilityViewProps) {
-  // Map event types to their amount-related fields
-  const eventAmountFields: Record<string, string[]> = {
-    'Soil preparation': ['Soil amendment (amount)', 'Fuel consumed'],
-    Irrigation: ['Water volume'],
-    Fertilization: ['Rate'],
-    'Pest and disease control': ['Rate'],
-    Weeding: ['Area treated', 'Labor'],
-    Harvest: ['Quantity'],
-  };
+  const [farmData, setFarmData] = useState<Farm | null>(null);
+  const [isLoadingFarm, setIsLoadingFarm] = useState(false);
 
+  // Load farm data when component mounts
+  useEffect(() => {
+    const loadFarmData = async () => {
+      if (careEvents.length === 0) return;
+
+      // Get batchId from first care event
+      const batchId = careEvents[0]?.batchId;
+      if (!batchId) return;
+
+      try {
+        setIsLoadingFarm(true);
+        const response = await getProductBatchDetail(batchId);
+        if (response.success && response.data?.season?.farm) {
+          setFarmData(response.data.season.farm);
+        }
+      } catch (error) {
+        console.error('Error loading farm data:', error);
+      } finally {
+        setIsLoadingFarm(false);
+      }
+    };
+
+    loadFarmData();
+  }, [careEvents]);
   // Helper function to extract numeric value and unit from text
   const extractAmount = (
     value: string
@@ -82,18 +106,20 @@ export function TraceabilityView({
     parsedPayload: parsePayload(event.payload),
     hash: event.hash || 'N/A',
     prevHash: event.prevHash || 'N/A',
+    batchId: event.batchId || 'N/A',
   }));
 
   // Calculate amounts summary from all events
   const amountsSummary = timelineEvents.reduce((acc, event) => {
     // Check if this event type has amount-related fields
-    const amountFields = eventAmountFields[event.eventType];
+    const amountFields = getAmountFieldsForEventType(event.eventType);
+    const unit = getUnitForEventType(event.eventType);
 
-    if (!amountFields || !event.parsedPayload) return acc;
+    if (!amountFields || amountFields.length === 0 || !event.parsedPayload)
+      return acc;
 
     // Extract and sum amounts from the relevant fields
     let totalAmount = 0;
-    let unit = '';
 
     amountFields.forEach((fieldName) => {
       // Look for the field in parsed payload (handle different case/formatting)
@@ -107,9 +133,6 @@ export function TraceabilityView({
         const extracted = extractAmount(payloadValue[1]);
         if (extracted) {
           totalAmount += extracted.amount;
-          if (!unit && extracted.unit) {
-            unit = extracted.unit;
-          }
         }
       }
     });
@@ -121,9 +144,6 @@ export function TraceabilityView({
       }
       acc[event.eventType].total += totalAmount;
       acc[event.eventType].eventCount += 1;
-      if (!acc[event.eventType].unit && unit) {
-        acc[event.eventType].unit = unit;
-      }
     }
 
     return acc;
@@ -148,186 +168,329 @@ export function TraceabilityView({
           </div>
         )}
 
-        {/* Timeline */}
-        <div className="max-w-4xl">
-          <Card className="p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <h3 className="text-gray-900">Events ({careEvents.length})</h3>
-              <Badge
-                className={
-                  errorMessage
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-green-100 text-green-800'
-                }
-              >
-                {errorMessage ? 'Verification Failed' : 'Verified Chain'}
-              </Badge>
-            </div>
-
-            <div className="relative">
-              {/* Timeline Line */}
-              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-green-200" />
-
-              {/* Timeline Items */}
-              <div className="space-y-6">
-                {timelineEvents.map((event) => (
-                  <div key={event.id} className="relative pl-16">
-                    {/* Event Content */}
-                    <div className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h4 className="text-gray-900 font-semibold mb-1">
-                            {event.eventType}
-                          </h4>
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              {event.date} {event.time}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
-                              {event.location}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {event.payload && (
-                        <div className="text-sm mb-3 p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded border border-blue-200">
-                          <p className="text-xs font-semibold text-gray-800 mb-2">
-                            📋 Event Details
-                          </p>
-                          {event.parsedPayload ? (
-                            <div className="space-y-1.5">
-                              {Object.entries(event.parsedPayload).map(
-                                ([key, value]) => (
-                                  <div
-                                    key={key}
-                                    className="flex items-start justify-between bg-white rounded p-2 border border-gray-100 text-xs"
-                                  >
-                                    <span className="text-gray-600 font-medium flex-shrink-0 max-w-[45%]">
-                                      {key.replace(/_/g, ' ')}
-                                    </span>
-                                    <span className="text-gray-900 font-semibold flex-1 ml-2 text-right break-words">
-                                      {String(value)}
-                                    </span>
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          ) : (
-                            <p className="text-gray-700 text-xs">
-                              {event.description}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      <details className="text-sm">
-                        <summary className="cursor-pointer text-green-600 hover:text-green-700 font-medium">
-                          📋 View tracability details
-                        </summary>
-                        <div className="mt-3 space-y-2 text-xs text-muted-foreground font-mono bg-gray-50 p-3 rounded border border-gray-200">
-                          <div className="break-all">
-                            <span className="font-semibold text-gray-700">
-                              Event Type:
-                            </span>
-                            <div className="text-gray-600">
-                              {event.eventType}
-                            </div>
-                          </div>
-                          <div className="break-all">
-                            <span className="font-semibold text-gray-700">
-                              Hash:
-                            </span>
-                            <div className="text-gray-600 break-all">
-                              {event.hash}
-                            </div>
-                          </div>
-                          <div className="break-all">
-                            <span className="font-semibold text-gray-700">
-                              Previous Hash:
-                            </span>
-                            <div className="text-gray-600 break-all">
-                              {event.prevHash}
-                            </div>
-                          </div>
-                        </div>
-                      </details>
-                    </div>
-                  </div>
-                ))}
+        {/* Main Layout - Two Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Timeline (2 columns on lg) */}
+          <div className="lg:col-span-2">
+            <Card className="p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-gray-900">Events ({careEvents.length})</h3>
+                <Badge
+                  className={
+                    errorMessage
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-green-100 text-green-800'
+                  }
+                >
+                  {errorMessage ? 'Verification Failed' : 'Verified Chain'}
+                </Badge>
               </div>
-            </div>
 
-            {/* Summary */}
-            {!errorMessage && (
-              <div className="mt-8 pt-6 border-t space-y-6">
-                {/* Statistics Summary */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                    Summary
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="text-sm text-muted-foreground">
-                        Total Events
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {careEvents.length}
-                      </p>
-                    </div>
+              <div className="relative">
+                {/* Timeline Line */}
+                <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-green-200" />
 
-                    <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                      <p className="text-sm text-muted-foreground">
-                        Chain Status
-                      </p>
-                      <p className="text-2xl font-bold text-green-600">
-                        ✓ Valid
-                      </p>
+                {/* Timeline Items */}
+                <div className="space-y-6">
+                  {timelineEvents.map((event) => (
+                    <div key={event.id} className="relative pl-16">
+                      {/* Event Content */}
+                      <div className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h4 className="text-gray-900 font-semibold mb-1">
+                              {event.eventType}
+                            </h4>
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                {event.date} {event.time}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                {event.location}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {event.payload && (
+                          <div className="text-sm mb-3 p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded border border-blue-200">
+                            <p className="text-xs font-semibold text-gray-800 mb-2">
+                              📋 Event Details
+                            </p>
+                            {event.parsedPayload ? (
+                              <div className="space-y-1.5">
+                                {Object.entries(event.parsedPayload).map(
+                                  ([key, value]) => (
+                                    <div
+                                      key={key}
+                                      className="flex items-start justify-between bg-white rounded p-2 border border-gray-100 text-xs"
+                                    >
+                                      <span className="text-gray-600 font-medium flex-shrink-0 max-w-[45%]">
+                                        {key.replace(/_/g, ' ')}
+                                      </span>
+                                      <span className="text-gray-900 font-semibold flex-1 ml-2 text-right break-words">
+                                        {String(value)}
+                                      </span>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-gray-700 text-xs">
+                                {event.description}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        <details className="text-sm">
+                          <summary className="cursor-pointer text-green-600 hover:text-green-700 font-medium">
+                            📋 View tracability details
+                          </summary>
+                          <div className="mt-3 space-y-2 text-xs text-muted-foreground font-mono bg-gray-50 p-3 rounded border border-gray-200">
+                            <div className="break-all">
+                              <span className="font-semibold text-gray-700">
+                                Event Type:
+                              </span>
+                              <div className="text-gray-600">
+                                {event.eventType}
+                              </div>
+                            </div>
+                            <div className="break-all">
+                              <span className="font-semibold text-gray-700">
+                                Hash:
+                              </span>
+                              <div className="text-gray-600 break-all">
+                                {event.hash}
+                              </div>
+                            </div>
+                            <div className="break-all">
+                              <span className="font-semibold text-gray-700">
+                                Previous Hash:
+                              </span>
+                              <div className="text-gray-600 break-all">
+                                {event.prevHash}
+                              </div>
+                            </div>
+                          </div>
+                        </details>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
+              </div>
 
-                {/* Amounts Summary */}
-                {Object.keys(amountsSummary).length > 0 && (
+              {/* Summary */}
+              {!errorMessage && (
+                <div className="mt-8 pt-6 border-t space-y-6">
+                  {/* Statistics Summary */}
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                      📦 Resource Usage Summary
+                      Summary
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Object.entries(amountsSummary).map(
-                        ([eventType, data]) => (
-                          <div
-                            key={eventType}
-                            className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200 hover:shadow-md transition-shadow"
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <h5 className="font-semibold text-gray-900">
-                                {eventType}
-                              </h5>
-                              <Badge variant="outline" className="text-xs">
-                                {data.eventCount} event
-                                {data.eventCount > 1 ? 's' : ''}
-                              </Badge>
-                            </div>
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-3xl font-bold text-orange-600">
-                                {data.total.toFixed(2)}
-                              </span>
-                              <span className="text-sm text-gray-600 font-medium">
-                                {data.unit}
-                              </span>
-                            </div>
-                          </div>
-                        )
-                      )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm text-muted-foreground">
+                          Total Events
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {careEvents.length}
+                        </p>
+                      </div>
+
+                      <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                        <p className="text-sm text-muted-foreground">
+                          Chain Status
+                        </p>
+                        <p className="text-2xl font-bold text-green-600">
+                          ✓ Valid
+                        </p>
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Amounts Summary */}
+                  {Object.keys(amountsSummary).length > 0 && (
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                        📦 Resource Usage Summary
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {Object.entries(amountsSummary).map(
+                          ([eventType, data]) => (
+                            <div
+                              key={eventType}
+                              className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200 hover:shadow-md transition-shadow"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <h5 className="font-semibold text-gray-900">
+                                  {eventType}
+                                </h5>
+                                <Badge variant="outline" className="text-xs">
+                                  {data.eventCount} event
+                                  {data.eventCount > 1 ? 's' : ''}
+                                </Badge>
+                              </div>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-bold text-green-500">
+                                  {data.total.toFixed(2)}
+                                </span>
+                                <span className="text-xl text-green-800 font-medium">
+                                  {data.unit}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </Card>
+          </div>
+
+          {/* Right Column - Farm Information */}
+          <div className="lg:col-span-1">
+            {isLoadingFarm ? (
+              <Card className="p-6 flex items-center justify-center min-h-96">
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                  <p className="text-muted-foreground">
+                    Loading farm details...
+                  </p>
+                </div>
+              </Card>
+            ) : farmData ? (
+              <Card className="p-6 sticky top-8 shadow-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  🏡 Farm Information
+                </h3>
+
+                <div className="space-y-4">
+                  {/* Farm Name */}
+                  <div>
+                    <p className="text-xs text-muted-foreground font-semibold uppercase">
+                      Farm Name
+                    </p>
+                    <p className="text-base font-medium text-gray-900 mt-1">
+                      {farmData.farmName}
+                    </p>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="grid grid-cols-1 gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground font-semibold uppercase">
+                        📞 Phone
+                      </p>
+                      <p className="text-sm text-gray-700 mt-1">
+                        {farmData.phone || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Area */}
+                  {farmData.area && (
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-xs text-muted-foreground font-semibold uppercase">
+                        📏 Farm Area
+                      </p>
+                      <p className="text-sm font-medium text-gray-900 mt-1">
+                        {farmData.area} m<sup>2</sup>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Batch Code Prefix */}
+                  {farmData.batchCodePrefix && (
+                    <div>
+                      <p className="text-xs text-muted-foreground font-semibold uppercase">
+                        Batch Code Prefix
+                      </p>
+                      <Badge variant="outline" className="mt-1">
+                        {farmData.batchCodePrefix}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Farm Status */}
+                  <div className="flex gap-2 flex-wrap">
+                    {farmData.isBanned && (
+                      <Badge variant="destructive">Banned</Badge>
+                    )}
+                    {farmData.isValidForSelling && (
+                      <Badge className="bg-green-100 text-green-800">
+                        Valid for Selling
+                      </Badge>
+                    )}
+                    {farmData.isConfirmAsMall && (
+                      <Badge className="bg-blue-100 text-blue-800">
+                        Confirmed as Mall
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Description */}
+                  {farmData.farmDesc && (
+                    <div className="pt-3 border-t">
+                      <p className="text-xs text-muted-foreground font-semibold uppercase">
+                        Description
+                      </p>
+                      <p className="text-sm text-gray-700 mt-2 line-clamp-3">
+                        {farmData.farmDesc}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Address */}
+                  {farmData.address && (
+                    <div className="pt-3 border-t">
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-muted-foreground font-semibold uppercase">
+                            Location
+                          </p>
+                          <p className="text-sm text-gray-700 mt-1">
+                            {farmData.address.detail}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {farmData.address.ward}, {farmData.address.district}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {farmData.address.province}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dates */}
+                  <div className="pt-3 border-t space-y-2 text-xs text-muted-foreground">
+                    <p>
+                      Created:{' '}
+                      {new Date(farmData.createdAt).toLocaleDateString()}
+                    </p>
+                    {farmData.updatedAt && (
+                      <p>
+                        Updated:{' '}
+                        {new Date(farmData.updatedAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <Card className="p-6">
+                <p className="text-center text-muted-foreground">
+                  No farm data available
+                </p>
+              </Card>
             )}
-          </Card>
+          </div>
         </div>
       </div>
       <Footer />
