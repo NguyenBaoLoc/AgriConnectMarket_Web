@@ -1,4 +1,11 @@
-import { ArrowLeft, MapPin, Calendar, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  MapPin,
+  Calendar,
+  Loader2,
+  Image as ImageIcon,
+  X,
+} from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
@@ -26,6 +33,7 @@ export function TraceabilityView({
 }: TraceabilityViewProps) {
   const [farmData, setFarmData] = useState<Farm | null>(null);
   const [isLoadingFarm, setIsLoadingFarm] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Load farm data when component mounts
   useEffect(() => {
@@ -65,9 +73,9 @@ export function TraceabilityView({
   };
 
   // Helper function to parse payload (handles double-encoded JSON with escaped Unicode)
-  const parsePayload = (payload: any): Record<string, any> | null => {
+  const parsePayload = (payload: unknown): Record<string, unknown> | null => {
     try {
-      let data: any = payload;
+      let data: unknown = payload;
 
       // Parse once (handles escaped Unicode characters)
       if (typeof data === 'string') {
@@ -81,11 +89,11 @@ export function TraceabilityView({
 
       // Ensure it's an object and not an array
       if (data && typeof data === 'object' && !Array.isArray(data)) {
-        return data;
+        return data as Record<string, unknown>;
       }
 
       return null;
-    } catch (e) {
+    } catch {
       return null;
     }
   };
@@ -97,7 +105,6 @@ export function TraceabilityView({
     time: formatUtcDateTime(event.occurredAt),
     eventType: event.eventType || 'Care Event',
     description: event.payload ? `Payload: ${event.payload}` : 'No payload',
-    location: 'Verified',
     verified:
       event.prevHash &&
       event.prevHash !==
@@ -107,6 +114,7 @@ export function TraceabilityView({
     hash: event.hash || 'N/A',
     prevHash: event.prevHash || 'N/A',
     batchId: event.batchId || 'N/A',
+    imageUrl: event.imageUrl || null,
   }));
 
   // Calculate amounts summary from all events
@@ -195,82 +203,107 @@ export function TraceabilityView({
                   {timelineEvents.map((event) => (
                     <div key={event.id} className="relative pl-16">
                       {/* Event Content */}
-                      <div className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between mb-3">
+                      <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-lg transition-shadow duration-300">
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-4">
                           <div className="flex-1">
-                            <h4 className="text-gray-900 font-semibold mb-1">
+                            <h4 className="text-lg font-bold text-gray-900 mb-2">
                               {event.eventType}
                             </h4>
                             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-4 w-4" />
-                                {event.date} {event.time}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
-                                {event.location}
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="h-4 w-4 text-blue-500" />
+                                <span>
+                                  {event.date} {event.time}
+                                </span>
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        {event.payload && (
-                          <div className="text-sm mb-3 p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded border border-blue-200">
-                            <p className="text-xs font-semibold text-gray-800 mb-2">
-                              📋 Event Details
-                            </p>
-                            {event.parsedPayload ? (
-                              <div className="space-y-1.5">
-                                {Object.entries(event.parsedPayload).map(
-                                  ([key, value]) => (
-                                    <div
-                                      key={key}
-                                      className="flex items-start justify-between bg-white rounded p-2 border border-gray-100 text-xs"
-                                    >
-                                      <span className="text-gray-600 font-medium flex-shrink-0 max-w-[45%]">
-                                        {key.replace(/_/g, ' ')}
-                                      </span>
-                                      <span className="text-gray-900 font-semibold flex-1 ml-2 text-right break-words">
-                                        {String(value)}
-                                      </span>
-                                    </div>
-                                  )
-                                )}
+                        {/* Image Display */}
+                        {event.imageUrl && (
+                          <div className="mb-4">
+                            <div className="relative rounded-lg overflow-hidden bg-linear-to-br from-gray-100 to-gray-50 border border-gray-200 hover:border-blue-300 transition-colors">
+                              <img
+                                src={event.imageUrl}
+                                alt={`${event.eventType} evidence`}
+                                className="w-full h-auto object-cover max-h-96 cursor-pointer hover:opacity-95 transition-opacity"
+                                onClick={() => setSelectedImage(event.imageUrl)}
+                              />
+                              <div
+                                className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2 hover:bg-white transition-colors cursor-pointer shadow-md"
+                                onClick={() => setSelectedImage(event.imageUrl)}
+                              >
+                                <ImageIcon className="h-4 w-4 text-blue-600" />
                               </div>
-                            ) : (
-                              <p className="text-gray-700 text-xs">
-                                {event.description}
-                              </p>
-                            )}
+                            </div>
                           </div>
                         )}
 
-                        <details className="text-sm">
-                          <summary className="cursor-pointer text-green-600 hover:text-green-700 font-medium">
-                            📋 View tracability details
+                        {/* Event Details */}
+                        {event.payload && (
+                          <div className="text-sm mb-4">
+                            <div className="p-4 bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-blue-200 shadow-sm">
+                              <p className="text-xs font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                <span className="text-lg">📋</span>
+                                Event Details
+                              </p>
+                              {event.parsedPayload ? (
+                                <div className="space-y-2">
+                                  {Object.entries(event.parsedPayload).map(
+                                    ([key, value]) => (
+                                      <div
+                                        key={key}
+                                        className="flex items-start justify-between bg-white rounded-lg p-3 border border-gray-100 hover:border-blue-200 hover:shadow-sm transition-all"
+                                      >
+                                        <span className="text-xs font-semibold text-blue-700 shrink-0 max-w-[45%]">
+                                          {key.replace(/_/g, ' ')}
+                                        </span>
+                                        <span className="text-sm text-gray-900 font-semibold flex-1 ml-3 text-right wrap-break-word">
+                                          {String(value)}
+                                        </span>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-gray-700 text-xs">
+                                  {event.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Traceability Details */}
+                        <details className="text-sm group">
+                          <summary className="cursor-pointer text-green-600 hover:text-green-700 font-semibold py-2 px-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-2">
+                            <span>🔐</span>
+                            View Details
                           </summary>
-                          <div className="mt-3 space-y-2 text-xs text-muted-foreground font-mono bg-gray-50 p-3 rounded border border-gray-200">
+                          <div className="mt-3 space-y-2 text-xs text-muted-foreground font-mono bg-gray-900 text-green-400 p-4 rounded-lg border border-gray-700 overflow-x-auto">
                             <div className="break-all">
-                              <span className="font-semibold text-gray-700">
+                              <span className="font-semibold text-green-300">
                                 Event Type:
                               </span>
-                              <div className="text-gray-600">
+                              <div className="text-gray-300 mt-1 ml-4">
                                 {event.eventType}
                               </div>
                             </div>
-                            <div className="break-all">
-                              <span className="font-semibold text-gray-700">
+                            <div className="break-all mt-3">
+                              <span className="font-semibold text-green-300">
                                 Hash:
                               </span>
-                              <div className="text-gray-600 break-all">
+                              <div className="text-gray-300 break-all mt-1 ml-4 bg-gray-800 p-2 rounded border border-gray-700">
                                 {event.hash}
                               </div>
                             </div>
-                            <div className="break-all">
-                              <span className="font-semibold text-gray-700">
+                            <div className="break-all mt-3">
+                              <span className="font-semibold text-green-300">
                                 Previous Hash:
                               </span>
-                              <div className="text-gray-600 break-all">
+                              <div className="text-gray-300 break-all mt-1 ml-4 bg-gray-800 p-2 rounded border border-gray-700">
                                 {event.prevHash}
                               </div>
                             </div>
@@ -322,7 +355,7 @@ export function TraceabilityView({
                           ([eventType, data]) => (
                             <div
                               key={eventType}
-                              className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200 hover:shadow-md transition-shadow"
+                              className="p-4 bg-linear-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200 hover:shadow-md transition-shadow"
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <h5 className="font-semibold text-gray-900">
@@ -449,7 +482,7 @@ export function TraceabilityView({
                   {farmData.address && (
                     <div className="pt-3 border-t">
                       <div className="flex items-start gap-2">
-                        <MapPin className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                        <MapPin className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
                         <div>
                           <p className="text-xs text-muted-foreground font-semibold uppercase">
                             Location
@@ -494,6 +527,25 @@ export function TraceabilityView({
         </div>
       </div>
       <Footer />
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center">
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors p-2 hover:bg-white/10 rounded-lg"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <img
+              src={selectedImage}
+              alt="Full size event"
+              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

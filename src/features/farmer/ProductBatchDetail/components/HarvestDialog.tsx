@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Input } from "../../../../components/ui/input";
-import { Label } from "../../../../components/ui/label";
+import { useState, useEffect } from 'react';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,9 +9,9 @@ import {
   AlertDialogDescription,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../../../../components/ui/alert-dialog";
-import { toast } from "sonner";
-import { harvestProductBatch } from "../api";
+} from '../../../../components/ui/alert-dialog';
+import { toast } from 'sonner';
+import { harvestProductBatch } from '../api';
 
 interface HarvestDialogProps {
   open: boolean;
@@ -41,7 +41,7 @@ export function HarvestDialog({
 
   const handleSubmit = async () => {
     if (!totalYield || Number(totalYield) <= 0) {
-      toast.error("Total yield must be greater than 0");
+      toast.error('Total yield must be greater than 0');
       return;
     }
 
@@ -50,16 +50,16 @@ export function HarvestDialog({
       const response = await harvestProductBatch(batchId, Number(totalYield));
 
       if (response.success) {
-        toast.success("Harvest updated successfully");
+        toast.success('Harvest updated successfully');
         setTotalYield(currentYield.toString());
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(response.message || "Failed to update harvest");
+        toast.error(response.message || 'Failed to update harvest');
       }
     } catch (error) {
-      console.error("Error:", error);
-      toast.error("Error updating harvest");
+      console.error('Error:', error);
+      toast.error('Error updating harvest');
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +77,9 @@ export function HarvestDialog({
 
         <div className="space-y-4 py-4">
           <div>
-            <Label htmlFor="yield">Total Yield</Label>
+            <Label htmlFor="yield" className="mb-2">
+              Total Yield
+            </Label>
             <Input
               id="yield"
               type="number"
@@ -97,7 +99,7 @@ export function HarvestDialog({
             disabled={isLoading}
             className="bg-green-600 hover:bg-green-700"
           >
-            {isLoading ? "Updating..." : "Update"}
+            {isLoading ? 'Updating...' : 'Update'}
           </AlertDialogAction>
         </div>
       </AlertDialogContent>

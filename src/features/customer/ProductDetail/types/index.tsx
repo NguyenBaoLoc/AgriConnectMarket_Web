@@ -111,6 +111,7 @@ interface CareEvent {
   payload: string;
   hash: string;
   prevHash: string;
+  imageUrl?: string;
 }
 
 type ProductDetailResponse = ApiResponse<ProductDetail>;

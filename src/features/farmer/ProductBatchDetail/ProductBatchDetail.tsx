@@ -7,6 +7,9 @@ import {
   ZoomIn,
   MapPin,
   Ban,
+  Tractor,
+  DollarSign,
+  DollarSignIcon,
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatUtcDate } from '../../../utils/timeUtils';
@@ -159,27 +162,32 @@ export function ProductBatchDetail() {
             onClick={() => setHarvestDialogOpen(true)}
             className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 border-yellow-200"
           >
-            <Leaf className="h-4 w-4 mr-2" />
-            Update Yield
+            <Tractor className="h-4 w-4" />
+            Update Harvest Yield
           </Button>
           <Button
             variant="outline"
             onClick={() => setSellDialogOpen(true)}
             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
           >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Sell Batch
+            <DollarSign className="h-4 w-4" />
+            Sell This Batch
           </Button>
+          {batch.isSelling && (
+            <Button
+              variant="outline"
+              onClick={() => setStopSellingDialogOpen(true)}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+            >
+              <Ban className="h-4 w-4" />
+              Stop Selling
+            </Button>
+          )}
           <Button
-            variant="outline"
-            onClick={() => setStopSellingDialogOpen(true)}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+            className="bg-green-500 hover:bg-green-600"
+            onClick={() => setIsAddEventDialogOpen(true)}
           >
-            <Ban className="h-4 w-4 mr-2" />
-            Stop Selling
-          </Button>
-          <Button onClick={() => setIsAddEventDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4" />
             Add Event
           </Button>
         </div>
@@ -263,12 +271,13 @@ export function ProductBatchDetail() {
           </Card>
 
           {/* Verification QR Code */}
-          {batch.verificationQr && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Verification QR Code
-                </h2>
+
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Verification QR Code
+              </h2>
+              {batch.verificationQr && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -277,7 +286,9 @@ export function ProductBatchDetail() {
                 >
                   <ZoomIn className="w-4 h-4" />
                 </Button>
-              </div>
+              )}
+            </div>
+            {batch.verificationQr ? (
               <div className="w-full flex justify-center bg-gray-50 rounded-lg p-4">
                 <img
                   src={batch.verificationQr}
@@ -286,8 +297,14 @@ export function ProductBatchDetail() {
                   onClick={() => setQrZoomOpen(true)}
                 />
               </div>
-            </Card>
-          )}
+            ) : (
+              <div className="min-h-[30vh] flex items-center justify-center pb-6">
+                <p className="text-center text-green-500 text-lg">
+                  No QR code available.
+                </p>
+              </div>
+            )}
+          </Card>
         </div>
 
         {/* Right: Related Information */}
@@ -295,7 +312,7 @@ export function ProductBatchDetail() {
           {/* Season Information */}
           {batch.season && (
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
                 Season Information
               </h3>
               <div className="space-y-3">
@@ -343,7 +360,7 @@ export function ProductBatchDetail() {
           {/* Farm Information */}
           {batch.season?.farm && (
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
                 Farm Information
               </h3>
               <div className="space-y-3">
@@ -433,37 +450,6 @@ export function ProductBatchDetail() {
               </div>
             </Card>
           )}
-
-          {/* Product Information */}
-          {batch.season?.product && (
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Product Information
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-muted-foreground">Product Name</p>
-                  <p className="font-semibold">
-                    {batch.season.product.productName}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-muted-foreground">Attribute</p>
-                  <p className="text-sm">
-                    {batch.season.product.productAttribute || 'No attribute'}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-muted-foreground">Description</p>
-                  <p className="text-sm text-gray-700">
-                    {batch.season.product.productDesc || 'No description'}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
         </div>
       </div>
 
@@ -509,12 +495,12 @@ export function ProductBatchDetail() {
       )}
 
       {/* QR Code Zoom Dialog */}
-      {batch?.verificationQr && (
-        <Dialog open={qrZoomOpen} onOpenChange={setQrZoomOpen} modal={true}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Verification QR Code</DialogTitle>
-            </DialogHeader>
+      <Dialog open={qrZoomOpen} onOpenChange={setQrZoomOpen} modal={true}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Verification QR Code</DialogTitle>
+          </DialogHeader>
+          {batch?.verificationQr ? (
             <div className="bg-gray-50 rounded-lg overflow-auto p-6 flex justify-center">
               <img
                 src={batch.verificationQr}
@@ -522,9 +508,11 @@ export function ProductBatchDetail() {
                 className="w-full max-w-md h-auto object-contain"
               />
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
+          ) : (
+            <p className="text-center text-green-500">No QR code available.</p>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Stop Selling Dialog */}
       <Dialog

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Input } from "../../../../components/ui/input";
-import { Label } from "../../../../components/ui/label";
+import { useState, useEffect } from 'react';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,9 +9,9 @@ import {
   AlertDialogDescription,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../../../../components/ui/alert-dialog";
-import { toast } from "sonner";
-import { sellProductBatch } from "../api";
+} from '../../../../components/ui/alert-dialog';
+import { toast } from 'sonner';
+import { sellProductBatch } from '../api';
 
 interface SellDialogProps {
   open: boolean;
@@ -32,7 +32,9 @@ export function SellDialog({
   currentPrice,
   onSuccess,
 }: SellDialogProps) {
-  const [quantity, setQuantity] = useState<string>(availableQuantity.toString());
+  const [quantity, setQuantity] = useState<string>(
+    availableQuantity.toString()
+  );
   const [price, setPrice] = useState<string>(currentPrice.toString());
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,12 +47,12 @@ export function SellDialog({
 
   const handleSubmit = async () => {
     if (!quantity || Number(quantity) <= 0) {
-      toast.error("Available quantity must be greater than 0");
+      toast.error('Available quantity must be greater than 0');
       return;
     }
 
     if (!price || Number(price) <= 0) {
-      toast.error("Price must be greater than 0");
+      toast.error('Price must be greater than 0');
       return;
     }
 
@@ -63,17 +65,17 @@ export function SellDialog({
       );
 
       if (response.success) {
-        toast.success("Product batch sold successfully");
+        toast.success('Product batch sold successfully');
         setQuantity(availableQuantity.toString());
         setPrice(currentPrice.toString());
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(response.message || "Failed to sell product batch");
+        toast.error(response.message || 'Failed to sell product batch');
       }
     } catch (error) {
-      console.error("Error:", error);
-      toast.error("Error selling product batch");
+      console.error('Error:', error);
+      toast.error('Error selling product batch');
     } finally {
       setIsLoading(false);
     }
@@ -91,11 +93,13 @@ export function SellDialog({
 
         <div className="space-y-4 py-4">
           <div>
-            <Label htmlFor="quantity">Available Quantity</Label>
+            <Label htmlFor="quantity" className="mb-2">
+              Sell Quantity (kg)
+            </Label>
             <Input
               id="quantity"
               type="number"
-              placeholder="Enter available quantity"
+              placeholder="Enter sell quantity"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               min="0"
@@ -104,7 +108,9 @@ export function SellDialog({
           </div>
 
           <div>
-            <Label htmlFor="price">Price</Label>
+            <Label htmlFor="price" className="mb-2">
+              Price (VND/kg)
+            </Label>
             <Input
               id="price"
               type="number"
@@ -118,13 +124,18 @@ export function SellDialog({
         </div>
 
         <div className="flex gap-2 justify-end">
-          <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel
+            disabled={isLoading}
+            className="text-red-500 hover:text-red-600"
+          >
+            Cancel
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleSubmit}
             disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-green-600 hover:bg-green-700"
           >
-            {isLoading ? "Selling..." : "Sell"}
+            {isLoading ? 'Selling...' : 'Sell'}
           </AlertDialogAction>
         </div>
       </AlertDialogContent>
