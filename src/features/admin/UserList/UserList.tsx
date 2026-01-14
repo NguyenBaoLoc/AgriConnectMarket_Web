@@ -148,24 +148,37 @@ export function UserList() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Username</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>Created At</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-8 bg-green-300!"
+                  >
                     No users found
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedUsers.map((user) => (
-                  <TableRow key={user.id}>
+                paginatedUsers.map((user, index) => (
+                  <TableRow
+                    key={user.id}
+                    className={
+                      index % 2 === 0
+                        ? 'bg-green-300! hover:bg-green-400!'
+                        : 'bg-white! hover:bg-green-400!'
+                    }
+                  >
+                    <TableCell className="text-muted-foreground">
+                      {user.account.userName}
+                    </TableCell>
                     <TableCell>{user.fullname}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {user.email}
@@ -177,9 +190,6 @@ export function UserList() {
                       <Badge variant="secondary">
                         {user.account?.role || 'N/A'}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatUtcDateTime(user.createdAt)}
                     </TableCell>
                     <TableCell>
                       <Button
