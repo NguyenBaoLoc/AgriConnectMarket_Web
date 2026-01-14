@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Search, Eye, Package, Plus, Leaf, ShoppingCart } from 'lucide-react';
+import {
+  Search,
+  Eye,
+  Package,
+  Plus,
+  Leaf,
+  ShoppingCart,
+  CirclePoundSterling,
+  CircleDollarSign,
+  Tractor,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
@@ -94,6 +104,10 @@ export function ProductBatchList() {
 
     return matchesSearch && matchesProductFilter;
   });
+
+  const isValidForSelling = (batch: ProductBatch) => {
+    return batch.totalYield - batch.availableQuantity > 0 && !batch.isSelling;
+  };
 
   const totalItems = filteredBatches.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -249,7 +263,7 @@ export function ProductBatchList() {
                     <TableHead>Available Qty</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Harvest Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -283,8 +297,17 @@ export function ProductBatchList() {
                         {Number(batch.price).toLocaleString('vi-VN')}₫
                       </TableCell>
                       <TableCell>{formatUtcDate(batch.harvestDate)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
+                      <TableCell className="text-center" align="center">
+                        <div className="flex gap-2 justify-left">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewBatchDetail(batch.id)}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            title="View detailed information of this batch"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -292,26 +315,19 @@ export function ProductBatchList() {
                             className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
                             title="Update harvest yield"
                           >
-                            <Leaf className="h-4 w-4" />
+                            <Tractor className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleSellClick(batch)}
-                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                            title="Sell product batch"
-                          >
-                            <ShoppingCart className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewBatchDetail(batch.id)}
-                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            Process
-                          </Button>
+                          {isValidForSelling(batch) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSellClick(batch)}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              title="Sell product batch"
+                            >
+                              <CircleDollarSign className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

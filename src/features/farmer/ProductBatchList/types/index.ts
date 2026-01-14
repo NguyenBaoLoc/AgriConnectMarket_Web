@@ -25,6 +25,7 @@ interface ProductBatch {
   updatedAt: string;
   id: string;
   season?: SeasonWithRelations;
+  isSelling?: boolean;
 }
 
 interface ProductBatchCreate {
