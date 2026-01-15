@@ -16,10 +16,17 @@ export function NotificationPage() {
 
     // Format date
     const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInMs = now.getTime() - date.getTime();
-        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        const date = new Date(dateString.replace(' ', 'T') + 'Z');
+
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        const startOfThatDay = new Date(date);
+        startOfThatDay.setHours(0, 0, 0, 0);
+
+        const diffInDays = Math.floor(
+            (startOfToday.getTime() - startOfThatDay.getTime()) / (1000 * 60 * 60 * 24)
+        );
 
         if (diffInDays === 0) {
             return 'Today at ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
