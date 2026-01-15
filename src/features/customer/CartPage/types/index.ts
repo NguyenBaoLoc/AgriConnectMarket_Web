@@ -1,4 +1,4 @@
-import type { ApiResponse } from "../../../../types";
+import type { ApiResponse } from '../../../../types';
 
 interface CartItemProduct {
   itemId: string;
@@ -13,6 +13,7 @@ interface CartItemProduct {
   units: string;
   itemPrice: number;
   seasonStatus: string;
+  isSelling?: boolean;
 }
 
 interface CartItemFarm {
@@ -54,4 +55,12 @@ interface CartUpdateResponse {
 
 type UpdateDeleteCartResponse = ApiResponse<CartUpdateResponse>;
 
-export type { CartItem, GetCartItemResponse, CartData, CartItemFarm, CartItemProduct, UpdateDeleteCartResponse, CartUpdateResponse };
+export type {
+  CartItem,
+  GetCartItemResponse,
+  CartData,
+  CartItemFarm,
+  CartItemProduct,
+  UpdateDeleteCartResponse,
+  CartUpdateResponse,
+};

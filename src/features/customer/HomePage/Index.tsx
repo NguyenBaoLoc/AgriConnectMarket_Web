@@ -43,7 +43,12 @@ export function HomePage({
     const loadRecommendedBatches = async () => {
       setIsLoadingBatches(true);
       const batches = await fetchRecommendedBatches();
-      setRecommendedBatches(batches);
+      const newBatches = batches.map((batch, index) => ({ ...batch, index }));
+      const randomNumber = Math.floor(Math.random() * 2) + 1;
+      const filterdBatches = newBatches.filter(
+        (b) => b.index % randomNumber === 0
+      );
+      setRecommendedBatches(filterdBatches);
       setIsLoadingBatches(false);
     };
     loadRecommendedBatches();

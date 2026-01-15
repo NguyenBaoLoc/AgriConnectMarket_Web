@@ -422,7 +422,7 @@ export function SeasonDetail() {
                             <p className="font-bold text-gray-900">
                               {batch.totalYield}{' '}
                               <span className="text-sm font-normal text-gray-600">
-                                {batch.units}
+                                kg
                               </span>
                             </p>
                           </div>
@@ -433,7 +433,7 @@ export function SeasonDetail() {
                             <p className="font-bold text-gray-900">
                               {batch.availableQuantity}{' '}
                               <span className="text-sm font-normal text-gray-600">
-                                {batch.units}
+                                kg
                               </span>
                             </p>
                           </div>
