@@ -177,9 +177,14 @@ export function NotificationPage() {
                         <div className="flex items-center gap-2 ml-auto">
                             <button
                                 onClick={() => markAllAsRead()}
-                                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors bg-green-600 text-white hover:bg-green-700}`}>
+                                disabled={unreadCount === 0}
+                                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors
+                                    ${unreadCount === 0
+                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        : 'bg-green-600 text-white hover:bg-green-700'
+                                    }`}>
                                 <Check className="w-4 h-4" />
-                                Mark ALL as Read
+                                Mark all as read
                             </button>
                         </div>
                     </div>
