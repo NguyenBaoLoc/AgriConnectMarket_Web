@@ -130,6 +130,13 @@ export function CartPage({
     cartData?.cartItems &&
     cartData.cartItems.filter((farm) => farm !== null).length > 0;
 
+  // Helper function to separate items by selling status
+  const separateItemsBySellingStatus = (items: any[]) => {
+    const selling = items.filter((item) => item.isSelling !== false);
+    const notSelling = items.filter((item) => item.isSelling === false);
+    return { selling, notSelling };
+  };
+
   const handleNavigateToProduct = (batchId: string) => {
     navigate(`/product/${batchId}`);
   };
@@ -496,178 +503,323 @@ export function CartPage({
                 <div className="space-y-4">
                   {cartData.cartItems
                     .filter((farm) => farm !== null && farm.items)
-                    .map((farm) => (
-                      <div
-                        key={farm.farmId}
-                        className="border border-gray-200 rounded-lg p-4 mb-4"
-                      >
-                        <h3 className="font-semibold text-green-600 mb-3">
-                          {farm.farmName}
-                        </h3>
-                        <div className="space-y-3">
-                          {farm.items?.map((item) => (
-                            <div
-                              key={item.itemId}
-                              className={`flex gap-4 pb-3 border-b border-gray-100 items-start transition-colors ${selectedItems.has(item.itemId)
-                                ? 'bg-green-50 p-2 rounded'
-                                : ''
-                                }`}
-                            >
-                              {/* Checkbox */}
-                              <input
-                                type="checkbox"
-                                checked={selectedItems.has(item.itemId)}
-                                onChange={() =>
-                                  handleToggleItemSelection(item.itemId)
-                                }
-                                className="mt-2 w-5 h-5 text-green-600 rounded cursor-pointer"
-                              />
+                    .map((farm) => {
+                      const { selling, notSelling } =
+                        separateItemsBySellingStatus(farm.items || []);
 
-                              <button
-                                onClick={() =>
-                                  handleNavigateToProduct(item.itemId)
-                                }
-                                className="flex-shrink-0 hover:opacity-80 transition-opacity"
-                              >
-                                {item.batchImageUrls.length > 0 ? (
-                                  <img
-                                    src={item.batchImageUrls[0]}
-                                    alt={item.productName}
-                                    className="w-20 h-20 object-cover rounded-lg cursor-pointer"
-                                  />
-                                ) : (
-                                  <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center cursor-pointer">
-                                    <ShoppingCart className="h-8 w-8 text-gray-400" />
-                                  </div>
-                                )}
-                              </button>
-                              <div
-                                className="flex-1 cursor-pointer"
-                                onClick={() =>
-                                  handleNavigateToProduct(item.batchId)
-                                }
-                              >
-                                <h4 className="font-medium hover:text-green-600 transition-colors">
-                                  {item.productName}
-                                </h4>
-                                <p className="text-sm text-gray-600">
-                                  {item.categoryName} • {item.seasonName}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  Batch: {item.batchCode}
-                                </p>
-                                <p className="text-gray-600 mt-1">
-                                  {formatVND(item.batchPrice)} / {item.units}
-                                </p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Status: {item.seasonStatus}
-                                </p>
-                              </div>
-                              <div className="text-right flex flex-col gap-2">
-                                <div>
-                                  <p className="text-sm text-gray-600">
-                                    Unit Price: {formatVND(item.batchPrice)}
-                                  </p>
-                                  <p className="font-semibold">
-                                    {formatVND(item.itemPrice)}
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6"
-                                    onClick={() =>
-                                      handleUpdateQuantity(
-                                        item.itemId,
-                                        item.batchId,
-                                        item.quantity - 1,
-                                        item.quantity
-                                      )
-                                    }
-                                    disabled={
-                                      updatingItems.has(item.itemId) ||
-                                      item.quantity <= 1
-                                    }
+                      return (
+                        <div key={farm.farmId}>
+                          {/* Selling Products Section */}
+                          {selling.length > 0 && (
+                            <div className="border border-gray-200 rounded-lg p-4 mb-4">
+                              <h3 className="font-semibold text-green-600 mb-3">
+                                {farm.farmName}
+                              </h3>
+                              <div className="space-y-3">
+                                {selling.map((item) => (
+                                  <div
+                                    key={item.itemId}
+                                    className={`flex gap-4 pb-3 border-b border-gray-100 items-start transition-colors ${
+                                      selectedItems.has(item.itemId)
+                                        ? 'bg-green-50 p-2 rounded'
+                                        : ''
+                                    }`}
                                   >
-                                    <Minus className="h-3 w-3" />
-                                  </Button>
-
-                                  {/* FIXED: quantityInputs is now safe because we clear it */}
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    value={
-                                      quantityInputs[item.itemId] ??
-                                      item.quantity
-                                    }
-                                    onChange={(e) => {
-                                      setQuantityInputs((prev) => ({
-                                        ...prev,
-                                        [item.itemId]: parseInt(
-                                          e.target.value,
-                                          10
-                                        ),
-                                      }));
-                                    }}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        const newQty =
-                                          quantityInputs[item.itemId] ??
-                                          item.quantity;
-                                        if (newQty >= 1) {
-                                          handleUpdateQuantity(
-                                            item.itemId,
-                                            item.batchId,
-                                            newQty,
-                                            item.quantity
-                                          );
-                                          clearQuantityInputs(item.itemId);
-                                        }
+                                    {/* Checkbox */}
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedItems.has(item.itemId)}
+                                      onChange={() =>
+                                        handleToggleItemSelection(item.itemId)
                                       }
-                                    }}
-                                    onBlur={() =>
-                                      clearQuantityInputs(item.itemId)
-                                    }
-                                    disabled={updatingItems.has(item.itemId)}
-                                    className="w-12 text-center text-sm font-medium border-0 outline-none"
-                                  />
+                                      className="mt-2 w-5 h-5 text-green-600 rounded cursor-pointer"
+                                    />
 
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6"
-                                    onClick={() =>
-                                      handleUpdateQuantity(
-                                        item.itemId,
-                                        item.batchId,
-                                        item.quantity + 1,
-                                        item.quantity
-                                      )
-                                    }
-                                    disabled={updatingItems.has(item.itemId)}
-                                  >
-                                    <Plus className="h-3 w-3" />
-                                  </Button>
-                                  <span className="text-xs text-gray-600 ml-1 min-w-fit">
-                                    KG
-                                  </span>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                  onClick={() => handleRemoveItem(item.itemId)}
-                                  disabled={updatingItems.has(item.itemId)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                    <button
+                                      onClick={() =>
+                                        handleNavigateToProduct(item.itemId)
+                                      }
+                                      className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                                    >
+                                      {item.batchImageUrls.length > 0 ? (
+                                        <img
+                                          src={item.batchImageUrls[0]}
+                                          alt={item.productName}
+                                          className="w-20 h-20 object-cover rounded-lg cursor-pointer"
+                                        />
+                                      ) : (
+                                        <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center cursor-pointer">
+                                          <ShoppingCart className="h-8 w-8 text-gray-400" />
+                                        </div>
+                                      )}
+                                    </button>
+                                    <div
+                                      className="flex-1 cursor-pointer"
+                                      onClick={() =>
+                                        handleNavigateToProduct(item.batchId)
+                                      }
+                                    >
+                                      <h4 className="font-medium hover:text-green-600 transition-colors">
+                                        {item.productName}
+                                      </h4>
+                                      <p className="text-sm text-gray-600">
+                                        {item.categoryName} • {item.seasonName}
+                                      </p>
+                                      <p className="text-sm text-gray-500">
+                                        Batch: {item.batchCode}
+                                      </p>
+                                      <p className="text-gray-600 mt-1">
+                                        {formatVND(item.batchPrice)} /{' '}
+                                        {item.units}
+                                      </p>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Status: {item.seasonStatus}
+                                      </p>
+                                    </div>
+                                    <div className="text-right flex flex-col gap-2">
+                                      <div>
+                                        <p className="text-sm text-gray-600">
+                                          Unit Price:{' '}
+                                          {formatVND(item.batchPrice)}
+                                        </p>
+                                        <p className="font-semibold">
+                                          {formatVND(item.itemPrice)}
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-1">
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-6 w-6"
+                                          onClick={() =>
+                                            handleUpdateQuantity(
+                                              item.itemId,
+                                              item.batchId,
+                                              item.quantity - 1,
+                                              item.quantity
+                                            )
+                                          }
+                                          disabled={
+                                            updatingItems.has(item.itemId) ||
+                                            item.quantity <= 1
+                                          }
+                                        >
+                                          <Minus className="h-3 w-3" />
+                                        </Button>
+
+                                        {/* FIXED: quantityInputs is now safe because we clear it */}
+                                        <input
+                                          type="number"
+                                          min="1"
+                                          value={
+                                            quantityInputs[item.itemId] ??
+                                            item.quantity
+                                          }
+                                          onChange={(e) => {
+                                            setQuantityInputs((prev) => ({
+                                              ...prev,
+                                              [item.itemId]: parseInt(
+                                                e.target.value,
+                                                10
+                                              ),
+                                            }));
+                                          }}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                              const newQty =
+                                                quantityInputs[item.itemId] ??
+                                                item.quantity;
+                                              if (newQty >= 1) {
+                                                handleUpdateQuantity(
+                                                  item.itemId,
+                                                  item.batchId,
+                                                  newQty,
+                                                  item.quantity
+                                                );
+                                                clearQuantityInputs(
+                                                  item.itemId
+                                                );
+                                              }
+                                            }
+                                          }}
+                                          onBlur={() =>
+                                            clearQuantityInputs(item.itemId)
+                                          }
+                                          disabled={updatingItems.has(
+                                            item.itemId
+                                          )}
+                                          className="w-12 text-center text-sm font-medium border-0 outline-none"
+                                        />
+
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-6 w-6"
+                                          onClick={() =>
+                                            handleUpdateQuantity(
+                                              item.itemId,
+                                              item.batchId,
+                                              item.quantity + 1,
+                                              item.quantity
+                                            )
+                                          }
+                                          disabled={updatingItems.has(
+                                            item.itemId
+                                          )}
+                                        >
+                                          <Plus className="h-3 w-3" />
+                                        </Button>
+                                        <span className="text-xs text-gray-600 ml-1 min-w-fit">
+                                          KG
+                                        </span>
+                                      </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                        onClick={() =>
+                                          handleRemoveItem(item.itemId)
+                                        }
+                                        disabled={updatingItems.has(
+                                          item.itemId
+                                        )}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                             </div>
-                          ))}
+                          )}
+
+                          {/* Not Selling Products Section */}
+                          {notSelling.length > 0 && (
+                            <div className="border border-yellow-300 rounded-lg p-4 mb-4 bg-yellow-50">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="bg-yellow-200 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                  ⚠️ Currently Unavailable
+                                </div>
+                                <h3 className="font-semibold text-yellow-700">
+                                  {farm.farmName} - Not Selling
+                                </h3>
+                              </div>
+                              <p className="text-sm text-yellow-700 mb-3">
+                                These products are not available for purchase at
+                                the moment. You can keep them in your cart or
+                                remove them below.
+                              </p>
+                              <div className="space-y-3">
+                                {notSelling.map((item) => (
+                                  <div
+                                    key={item.itemId}
+                                    className="flex gap-4 pb-3 border-b border-yellow-200 items-start opacity-75"
+                                  >
+                                    {/* Disabled Checkbox */}
+                                    <input
+                                      type="checkbox"
+                                      disabled
+                                      className="mt-2 w-5 h-5 text-gray-400 rounded cursor-not-allowed"
+                                      title="This item is not available for purchase"
+                                    />
+
+                                    <button
+                                      onClick={() =>
+                                        handleNavigateToProduct(item.itemId)
+                                      }
+                                      className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                                    >
+                                      {item.batchImageUrls.length > 0 ? (
+                                        <img
+                                          src={item.batchImageUrls[0]}
+                                          alt={item.productName}
+                                          className="w-20 h-20 object-cover rounded-lg cursor-pointer grayscale"
+                                        />
+                                      ) : (
+                                        <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center cursor-pointer">
+                                          <ShoppingCart className="h-8 w-8 text-gray-400" />
+                                        </div>
+                                      )}
+                                    </button>
+                                    <div
+                                      className="flex-1 cursor-pointer"
+                                      onClick={() =>
+                                        handleNavigateToProduct(item.batchId)
+                                      }
+                                    >
+                                      <h4 className="font-medium text-gray-600 line-through">
+                                        {item.productName}
+                                      </h4>
+                                      <p className="text-sm text-gray-600">
+                                        {item.categoryName} • {item.seasonName}
+                                      </p>
+                                      <p className="text-sm text-gray-500">
+                                        Batch: {item.batchCode}
+                                      </p>
+                                      <p className="text-gray-600 mt-1">
+                                        {formatVND(item.batchPrice)} /{' '}
+                                        {item.units}
+                                      </p>
+                                      <p className="text-xs text-yellow-700 mt-1 font-semibold">
+                                        Status: Not Selling
+                                      </p>
+                                    </div>
+                                    <div className="text-right flex flex-col gap-2">
+                                      <div>
+                                        <p className="text-sm text-gray-600">
+                                          Unit Price:{' '}
+                                          {formatVND(item.batchPrice)}
+                                        </p>
+                                        <p className="font-semibold text-gray-600">
+                                          {formatVND(item.itemPrice)}
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-1 bg-gray-100">
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-6 w-6"
+                                          disabled
+                                        >
+                                          <Minus className="h-3 w-3 text-gray-400" />
+                                        </Button>
+                                        <span className="w-12 text-center text-sm font-medium text-gray-400">
+                                          {item.quantity}
+                                        </span>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-6 w-6"
+                                          disabled
+                                        >
+                                          <Plus className="h-3 w-3 text-gray-400" />
+                                        </Button>
+                                        <span className="text-xs text-gray-600 ml-1 min-w-fit">
+                                          KG
+                                        </span>
+                                      </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                        onClick={() =>
+                                          handleRemoveItem(item.itemId)
+                                        }
+                                        disabled={updatingItems.has(
+                                          item.itemId
+                                        )}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </div>
               )}
             </Card>

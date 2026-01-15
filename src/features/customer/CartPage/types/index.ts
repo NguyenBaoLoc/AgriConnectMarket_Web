@@ -14,6 +14,7 @@ interface CartItemProduct {
   units: string;
   itemPrice: number;
   seasonStatus: string;
+  isSelling?: boolean;
 }
 
 interface CartItemFarm {

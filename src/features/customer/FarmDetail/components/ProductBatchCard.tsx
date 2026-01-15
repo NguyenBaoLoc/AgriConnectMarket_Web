@@ -101,14 +101,14 @@ export function ProductBatchCard({ batch, onNavigate }: ProductBatchCardProps) {
                 : 'bg-red-100 text-red-800'
             }
           >
-            {batch.availableQuantity} {batch.units}
+            {batch.availableQuantity} kg
           </Badge>
         </div>
 
         {/* Details */}
         <div className="text-sm text-muted-foreground space-y-1">
           <p>
-            <strong>Total Yield:</strong> {batch.totalYield} {batch.units}
+            <strong>Total Yield:</strong> {batch.totalYield} kg
           </p>
           {batch.harvestDate && (
             <p>

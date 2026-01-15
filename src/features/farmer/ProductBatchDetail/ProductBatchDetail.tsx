@@ -221,7 +221,7 @@ export function ProductBatchDetail() {
                   Total Yield
                 </p>
                 <p className="text-lg font-semibold text-gray-900">
-                  {batch.totalYield} {batch.units}
+                  {batch.totalYield} kg
                 </p>
               </div>
 
@@ -238,7 +238,7 @@ export function ProductBatchDetail() {
                         : 'bg-red-100 text-red-800'
                     }
                   >
-                    {batch.availableQuantity} {batch.units}
+                    {batch.availableQuantity} kg
                   </Badge>
                 </p>
               </div>

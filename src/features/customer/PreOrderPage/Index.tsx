@@ -263,9 +263,7 @@ export function PreOrderPage() {
                     <div className="text-3xl font-bold">
                       {Number(batch.price).toLocaleString('vi-VN')}₫
                     </div>
-                    <div className="text-green-100 text-sm">
-                      per {batch.units}
-                    </div>
+                    <div className="text-green-100 text-sm">per kg</div>
                   </div>
                 </div>
               </div>
@@ -280,7 +278,7 @@ export function PreOrderPage() {
                     <p className="text-lg font-bold text-gray-900">
                       {batch.availableQuantity}
                     </p>
-                    <p className="text-xs text-green-600">{batch.units}</p>
+                    <p className="text-xs text-green-600">kg</p>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
                     <Calendar className="h-6 w-6 text-blue-600 mx-auto mb-2" />
@@ -410,7 +408,7 @@ export function PreOrderPage() {
                       className="flex items-center gap-2 text-base font-semibold text-gray-900"
                     >
                       <Package className="h-4 w-4 text-green-600" />
-                      Quantity ({batch.units}) *
+                      Quantity (kg) *
                     </Label>
                     <div className="relative">
                       <Input
@@ -425,7 +423,7 @@ export function PreOrderPage() {
                         required
                       />
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full">
-                        {batch.units}
+                        kg
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -434,7 +432,7 @@ export function PreOrderPage() {
                         <span className="font-semibold text-gray-900">
                           {batch.availableQuantity}
                         </span>{' '}
-                        {batch.units}
+                        kg
                       </p>
                       {quantity > 0 && (
                         <p className="text-green-600 font-semibold">
@@ -516,7 +514,7 @@ export function PreOrderPage() {
                       Quantity:
                     </span>
                     <span className="font-semibold text-gray-900">
-                      {quantity > 0 ? quantity : 0} {batch.units}
+                      {quantity > 0 ? quantity : 0} kg
                     </span>
                   </div>
                   <div className="h-px bg-gray-300" />
