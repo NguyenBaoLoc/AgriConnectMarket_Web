@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Bell, Check, Mail, Eye, ExternalLink, Filter, ArrowUpDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Notification } from './types';
-import { getMyNotifications, readAll, updateNotificationStatus } from './api';
+import { getMyNotifications, updateNotificationStatus } from './api';
+import { readAll } from '../../customer/NotificationPage/api';
 import { useNotification } from '../../../components/NotificationContext';
+
 
 export function NotificationPage() {
     const navigate = useNavigate();
@@ -46,13 +48,12 @@ export function NotificationPage() {
         }
     };
 
-
     // Navigate to order page
     const goToOrder = (id: string, isRead: boolean, orderId: string) => {
         if (!isRead) {
             toggleReadStatus(id);
         }
-        navigate(`/orders/${orderId}`);
+        navigate(`/farmer/orders/${orderId}`);
     };
 
     const markAllAsRead = async () => {
@@ -167,6 +168,7 @@ export function NotificationPage() {
                                 <option value="oldest">Oldest First</option>
                             </select>
                         </div>
+
                         <div className="flex items-center gap-2 ml-auto">
                             <button
                                 onClick={() => markAllAsRead()}

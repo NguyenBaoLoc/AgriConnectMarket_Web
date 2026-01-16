@@ -27,6 +27,7 @@ import { ProductDetail } from '../features/customer/ProductDetail/Index';
 import { TraceabilityView } from '../features/customer/TraceabilityViewPage/Index';
 import { FarmDetail } from '../features/customer/FarmDetail/Index';
 import { NotificationPage } from '../features/customer/NotificationPage/Index';
+import { NotificationPage as FarmerNotificationPage } from '../features/farmer/NotificationPage/Index';
 import { FeedbackPage } from '../features/customer/FeedbackPage/Index';
 import { Header } from '../features/customer/components';
 import { ErrorPage } from '../components/ErrorPage';
@@ -202,7 +203,7 @@ export default function App() {
     }, []);
     return (
       <>
-        <Header notificationCount={0} cartItemsCount={headerCartCount} />
+        <Header cartItemsCount={headerCartCount} />
         <Outlet context={{ setHeaderCartCount }} />
       </>
     );
@@ -306,7 +307,7 @@ export default function App() {
             <Route path="/addresses" element={<AddressesPage />} />
             <Route
               path="/orders"
-              element={<OrdersPage onNavigateToFeedback={() => {}} />}
+              element={<OrdersPage onNavigateToFeedback={() => { }} />}
             />
             <Route path="/orders/:orderId" element={<OrderDetailPage />} />
             <Route
@@ -377,6 +378,7 @@ export default function App() {
           <Route path="/farmer/farms" element={<FarmManage />} />
           <Route path="/farmer/seasons/:seasonId" element={<SeasonDetail />} />
           <Route path="/farmer/farms/:farmId" element={<FarmerFarmDetail />} />
+          <Route path="/farmer/notifications" element={<FarmerNotificationPage />} />
         </Route>
         {/* Admin Routes */}
         <Route element={<AdminLayout />}>

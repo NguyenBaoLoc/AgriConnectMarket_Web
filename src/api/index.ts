@@ -1,10 +1,12 @@
-const BASE_URL = 'http://192.168.1.231:5170/api';
+const BASE_URL = 'http://192.168.2.67:5170/api';
 
 export const API = {
   base: BASE_URL,
   address: {
+    list: `${BASE_URL}/addresses`,
     me: `${BASE_URL}/addresses/me`,
     add: `${BASE_URL}/addresses`,
+    farm: `${BASE_URL}/addresses/farm`,
     update: (addressId: string) => `${BASE_URL}/addresses/${addressId}`,
     setDefault: (addressId: string) =>
       `${BASE_URL}/addresses/${addressId}/default`,
@@ -131,5 +133,13 @@ export const API = {
     get: (transactionId: string) => `${BASE_URL}/transactions/${transactionId}`,
     resolve: (transactionId: string) =>
       `${BASE_URL}/transactions/${transactionId}/resolve`,
+  },
+  notifications: {
+    review: `${BASE_URL}/notifications/review`,
+    reply: `${BASE_URL}/notifications/reply`,
+    me: `${BASE_URL}/notifications/me`,
+    patch: (notificationId: string) =>
+      `${BASE_URL}/notifications/${notificationId}`,
+    readall: `${BASE_URL}/notifications/read-all`,
   },
 };
