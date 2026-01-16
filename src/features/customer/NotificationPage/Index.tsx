@@ -14,10 +14,17 @@ export function NotificationPage() {
 
     // Format date
     const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInMs = now.getTime() - date.getTime();
-        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        const date = new Date(dateString.replace(' ', 'T') + 'Z');
+
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        const startOfThatDay = new Date(date);
+        startOfThatDay.setHours(0, 0, 0, 0);
+
+        const diffInDays = Math.floor(
+            (startOfToday.getTime() - startOfThatDay.getTime()) / (1000 * 60 * 60 * 24)
+        );
 
         if (diffInDays === 0) {
             return 'Today at ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -170,9 +177,14 @@ export function NotificationPage() {
                         <div className="flex items-center gap-2 ml-auto">
                             <button
                                 onClick={() => markAllAsRead()}
-                                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors bg-green-600 text-white hover:bg-green-700}`}>
+                                disabled={unreadCount === 0}
+                                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors
+                                    ${unreadCount === 0
+                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        : 'bg-green-600 text-white hover:bg-green-700'
+                                    }`}>
                                 <Check className="w-4 h-4" />
-                                Mark ALL as Read
+                                Mark all as read
                             </button>
                         </div>
                     </div>
