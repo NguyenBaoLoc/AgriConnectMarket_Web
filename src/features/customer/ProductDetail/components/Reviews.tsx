@@ -16,7 +16,6 @@ import { formatUtcDate, formatUtcDateTime } from '../../../../utils/timeUtils';
 import { Avatar } from '../../../../components/ui/avatar';
 import { Badge } from '../../../../components/ui/badge';
 import { Textarea } from '../../../../components/ui/textarea';
-import { createNotification } from "../api";
 
 interface ReviewsProps {
   farmId: string;
@@ -44,15 +43,13 @@ export const Reviews: React.FC<ReviewsProps> = ({ farmId, productId }) => {
     return { counts, avg };
   }, [reviews]);
 
-  const handleReply = async (reviewId: string, reviewUserId: string, text: string) => {
+  const handleReply = (reviewId: string, text: string) => {
     try {
       if (currentRole !== 'Farmer') throw new Error('Only farmer can reply');
       if (accountFarmId !== farmId)
         throw new Error('You can only reply to reviews of your farm');
       if (!accountId) throw new Error('Missing farmer account id');
       replyToReview(reviewId, accountId, text);
-      console.log("Creating notification for reply to userId:", reviewUserId);
-      await createNotification("REPLY", reviewUserId)
       setRefreshKey((k) => k + 1);
     } catch (e: any) {
       alert(e?.message || 'Failed to reply');
@@ -67,10 +64,11 @@ export const Reviews: React.FC<ReviewsProps> = ({ farmId, productId }) => {
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
             key={i}
-            className={`${sizeClass} ${i < rating
+            className={`${sizeClass} ${
+              i < rating
                 ? 'fill-yellow-400 text-yellow-400'
                 : 'fill-gray-200 text-gray-200'
-              }`}
+            }`}
           />
         ))}
       </div>
@@ -206,8 +204,12 @@ export const Reviews: React.FC<ReviewsProps> = ({ farmId, productId }) => {
                       </p>
                     </div>
                   ) : (
-                    currentRole === "Farmer" && accountFarmId === farmId && (
-                      <ReplyBox reviewId={productReview.id} reviewUserId={productReview.userId} onReply={handleReply} />
+                    currentRole === 'Farmer' &&
+                    accountFarmId === farmId && (
+                      <ReplyBox
+                        reviewId={productReview.id}
+                        onReply={handleReply}
+                      />
                     )
                   )}
                 </div>
@@ -289,7 +291,10 @@ export const Reviews: React.FC<ReviewsProps> = ({ farmId, productId }) => {
                           currentRole === 'Farmer' &&
                           accountFarmId === farmId && (
                             <div className="mt-3">
-                              <ReplyBox reviewId={review.id} reviewUserId={review.userId} onReply={handleReply} />
+                              <ReplyBox
+                                reviewId={review.id}
+                                onReply={handleReply}
+                              />
                             </div>
                           )
                         )}
@@ -328,9 +333,12 @@ export const Reviews: React.FC<ReviewsProps> = ({ farmId, productId }) => {
   );
 };
 
-const ReplyBox: React.FC<{ reviewId: string; reviewUserId: string; onReply: (id: string, userId: string, text: string) => void }> = ({ reviewId, reviewUserId, onReply }) => {
+const ReplyBox: React.FC<{
+  reviewId: string;
+  onReply: (id: string, text: string) => void;
+}> = ({ reviewId, onReply }) => {
   const [open, setOpen] = useState(false);
-  const [text, setText] = useState("");
+  const [text, setText] = useState('');
 
   return (
     <div>
@@ -356,9 +364,9 @@ const ReplyBox: React.FC<{ reviewId: string; reviewUserId: string; onReply: (id:
           <div className="flex gap-2">
             <Button
               onClick={() => {
-                onReply(reviewId, reviewUserId, text);
+                onReply(reviewId, text);
                 setOpen(false);
-                setText("");
+                setText('');
               }}
               className="bg-green-600 hover:bg-green-700"
               disabled={!text.trim()}
@@ -368,7 +376,10 @@ const ReplyBox: React.FC<{ reviewId: string; reviewUserId: string; onReply: (id:
             </Button>
             <Button
               variant="ghost"
-              onClick={() => { setOpen(false); setText(""); }}
+              onClick={() => {
+                setOpen(false);
+                setText('');
+              }}
               className="hover:bg-gray-100"
             >
               <X className="h-4 w-4 mr-1" />

@@ -127,38 +127,3 @@ export async function verifyCareEvents(
     }
   }
 }
-
-export async function createNotification(
-  type: string,
-  receiverId: string
-): Promise<any> {
-  try {
-    let url = '';
-    if (type === 'REPLY') {
-      url = API.notifications.reply;
-    } else {
-      url = API.notifications.review;
-    }
-    const token = localStorage.getItem('token');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const response = await axios.post<any>(
-      url,
-      {
-        type,
-        receiverId,
-      },
-      { headers }
-    );
-    return response.data;
-  } catch (error) {
-    const axiosError = error as { response?: { data?: unknown } };
-    if (axiosError.response?.data) {
-      return axiosError.response.data as CareEventResponse;
-    } else {
-      return {
-        success: false,
-        message: 'Error',
-      };
-    }
-  }
-}
