@@ -6,7 +6,6 @@ import { Label } from "../../../../components/ui/label";
 import useReviews from "../../../../hooks/useReviews";
 import type { Review } from "../../../../hooks/useReviews";
 import { toast } from "sonner";
-import { createNotification } from "../api";
 
 interface AddReviewFormProps {
   farmId: string;
@@ -30,19 +29,19 @@ export const AddReviewForm: React.FC<AddReviewFormProps> = ({ farmId, productId,
 
   const handleFile = (file?: File) => {
     if (!file) return;
-
+    
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error("Please select an image file");
       return;
     }
-
+    
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image size should be less than 5MB");
       return;
     }
-
+    
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
@@ -85,7 +84,6 @@ export const AddReviewForm: React.FC<AddReviewFormProps> = ({ farmId, productId,
       setText("");
       setImageBase64(undefined);
       onAdded && onAdded(review);
-      await createNotification("REVIEW", farmId)
     } catch (err: any) {
       toast.error(err?.message || "Failed to add review");
     } finally {
@@ -121,10 +119,11 @@ export const AddReviewForm: React.FC<AddReviewFormProps> = ({ farmId, productId,
               onMouseLeave={() => setHoveredRating(0)}
             >
               <Star
-                className={`h-10 w-10 transition-colors ${n <= (hoveredRating || rating)
-                  ? "fill-yellow-400 text-yellow-400"
-                  : "fill-gray-200 text-gray-200"
-                  }`}
+                className={`h-10 w-10 transition-colors ${
+                  n <= (hoveredRating || rating)
+                    ? "fill-yellow-400 text-yellow-400"
+                    : "fill-gray-200 text-gray-200"
+                }`}
               />
             </button>
           ))}
@@ -162,7 +161,7 @@ export const AddReviewForm: React.FC<AddReviewFormProps> = ({ farmId, productId,
         <Label className="text-base font-semibold text-gray-900 mb-3 block">
           Add Photo (Optional)
         </Label>
-
+        
         {!imageBase64 ? (
           <div className="relative">
             <input

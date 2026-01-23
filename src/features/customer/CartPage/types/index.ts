@@ -1,5 +1,4 @@
 import type { ApiResponse } from '../../../../types';
-import type { AddressItem } from '../../Addresses/api';
 
 interface CartItemProduct {
   itemId: string;
@@ -55,7 +54,6 @@ interface CartUpdateResponse {
 }
 
 type UpdateDeleteCartResponse = ApiResponse<CartUpdateResponse>;
-type AddressListResponse = ApiResponse<AddressItem[]>;
 
 export type {
   CartItem,
@@ -65,5 +63,4 @@ export type {
   CartItemProduct,
   UpdateDeleteCartResponse,
   CartUpdateResponse,
-  AddressListResponse,
 };
